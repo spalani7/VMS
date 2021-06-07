@@ -1,0 +1,109 @@
+#idVisitors, #idVehicles, #idPhone{
+  font-size:120%; 
+}
+
+.vertically-centered {
+  height: 40px;
+  vertical-align: middle;
+}
+
+.panel-heading {
+  font-size:150%; 
+  font-weight: bold; 
+  text-align: center;
+}
+
+.container {
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: 05px;
+  margin-left: 35px;
+}
+
+.tab-pane {
+  padding-right: 10px;
+  padding-left: 10px;
+  padding-top: 10px;
+  padding-bottom: 0px;
+}
+
+.well {
+  padding-right: 10px;
+  padding-left: 10px;
+  padding-top: 10px;
+  padding-bottom: 0px;
+  margin-bottom: 0px;
+  text-align:center; 
+  font-weight: bold;
+}
+
+h1 {
+  font-size:220%;
+}
+
+@media only screen and (max-width: 1200px) {
+  /* For smaller screens */
+  h1 {
+    font-size:200%;
+  }
+  h4 {
+    font-size:120%;
+  }
+  .vertically-centered {
+    height: 30px;
+  }
+}
+
+@media only screen and (max-width: 992) {
+  /* For smaller screens */
+  [class*="col-"] {
+    width: 100%;
+  }
+  .panel-heading {
+    font-size:110%; 
+    font-weight: bold; 
+    text-align: center;
+  }
+  .container {
+    padding-right: 5px;
+    padding-left: 5px;
+    margin-right: 10px;
+    margin-left: 10px;
+  }
+  .tab-pane {
+    width: 100%;
+  }
+  .vertically-centered {
+    height: 25px;
+  }
+}
+
+@media only screen and (max-width: 768px) {
+  /* For mobile phones: */
+  h1 {
+    font-size:150%;
+  }
+  h4 {
+    font-size:80%;
+  }
+  .panel-heading {
+    font-size:110%; 
+    font-weight: bold; 
+    text-align: center;
+  }
+  .container {
+    padding-right: 5px;
+    padding-left: 5px;
+    margin-right: 10px;
+    margin-left: 10px;
+  }
+  .vertically-centered {
+    height: 20px;
+  }
+  [class*="col-"] {
+    width: 100%;
+  }
+  .tab-pane {
+    width: 100%;
+  }
+}
