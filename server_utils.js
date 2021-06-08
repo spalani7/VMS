@@ -157,6 +157,6 @@ module.exports.Checkout = async function(req, res){
         // }
     );
 
-    if(doc == null) return [400, "Visitor checkin not found2\n" + JSON.stringify(req.body)];
+    if(doc == null) return [400, "Visitor checkin not found\n" + JSON.stringify(req.body)];
     else return [200, "Visitor checked out"];
 }
