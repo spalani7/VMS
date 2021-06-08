@@ -42,10 +42,12 @@ function updateVisitorsList(visitors){
 
     // clear old lists
     let visitorsList = document.getElementById("idVisitors");
-    for(var i = 1; i < visitorsList.length; i++)
+    let visitorsListLen = visitorsList.length
+    for(var i = 1; i < visitorsListLen; i++)
         visitorsList.remove(i);
     let vehiclesList = document.getElementById("idVehicles");
-    for(var i = 1; i < vehiclesList.length; i++)
+    let vehiclesListLen = vehiclesList.length
+    for(var i = 1; i < vehiclesListLen.length; i++)
         vehiclesList.remove(i);
     
     // populate new lists
@@ -156,7 +158,6 @@ function searchVisitor(){
         datatype: "json",
         url: '/searchvisitor',
         success: function(returns){
-            console.log(returns);
             if(returns){
                 updateVisitorsList(JSON.parse(returns));
                 document.getElementById("idAddVisitor").disabled = JSON.parse(returns).length > 0;
