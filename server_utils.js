@@ -42,6 +42,7 @@ module.exports.GetVisitorLogs = async function(req, res){
 
 module.exports.GetVisitors = async function(req, res){
     // Retrieve only todays data for display on gui
+    console.log("Getting all Visitors data..");
     const docs = await dbVistor.find({});
     console.log(docs);
     return [200, JSON.stringify(docs)];
@@ -49,15 +50,13 @@ module.exports.GetVisitors = async function(req, res){
 
 module.exports.SearchVisitors = async function(req, res){
     // Retrieve only todays data for display on gui
-    console.log("Searching Visitors");
-    console.log(req.body);
+    console.log("Searching Visitor..");
 
     for (var e in req.body) {
         if (req.body[e] === null || req.body[e] === undefined || req.body[e]=='') {
           delete req.body[e];
         }
     }
-    console.log(req.body);
 
     const docs = await dbVistor.find(req.body);
     console.log(docs);
@@ -96,12 +95,10 @@ module.exports.Checkin = async function(req, res){
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     req.body['Date'] = {$gte: today};
     req.body['CheckedIn'] = true;
-    console.log(req.body)
     const docs = await dbVistorLog.find(req.body, null, {sort: {Date: -1}});
-    console.log(docs)
     if (docs.length > 0)
     {
-        console.log("Visitor already checked in today\n" + docs);
+        // console.log("Visitor already checked in today\n" + docs);
         return [400, 'User already checked in today'];
     }
 

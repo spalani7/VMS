@@ -107,7 +107,6 @@ function reqVisitors(){
         datatype: "json",
         url: '/visitors',
         success: function(returns){
-            alert(returns);
             if(returns)
                 updateVisitorsList(JSON.parse(returns))
             else
@@ -265,7 +264,7 @@ function reqCheckout(){
             }
             else{
                 console.log(returns);
-                alert("Error: Checkin failed due to unknown error");
+                alert("Error: Checkout failed due to unknown error");
             }
         },
         error: function(errorMsg){
