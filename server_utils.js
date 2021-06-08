@@ -71,9 +71,9 @@ module.exports.AddVisitor = async function(req, res){
     // Populate new visitor data
     var newVisitor = new dbVistor({
         Date:Date.now(),
-        Name:req.body.name, 
-        VehicleNo:req.body.vehicleNo, 
-        Phone:req.body.phone, 
+        Name:req.body.Name, 
+        VehicleNo:req.body.VehicleNo, 
+        Phone:req.body.Phone, 
     });
 
     let error = newVisitor.validateSync();
@@ -144,7 +144,7 @@ module.exports.Checkout = async function(req, res){
         }, 
         {
             TimeOut: Date.now(), 
-            Trade: req.body.trade, 
+            Trade: req.body.Trade, 
             CheckedIn: false
         }, 
         {
