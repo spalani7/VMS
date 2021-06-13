@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-var mongoDB = process.env.mongoDBURL;
+let config = JSON.parse(require('fs').readFileSync('config.json'));
+var mongoDB = config.MongoDBURL;
 const options = {
     useNewUrlParser: false,
     useUnifiedTopology: true,
@@ -14,7 +15,6 @@ const options = {
     keepAliveInitialDelay: 300000 // number of milliseconds to wait before initiating keepAlive
   };
 mongoose.connect(mongoDB, options).catch(error => console.error.bind(console, 'MongoDB connection error:'));
-
 
 mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error:'));
 mongoose.connection.once('open', () => {

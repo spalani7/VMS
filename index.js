@@ -1,11 +1,10 @@
 const express = require('express');
 const Dinero = require('dinero.js');
 
-// read .env config file
-require('dotenv').config();
+let config = JSON.parse(require('fs').readFileSync('config.json'));
 
-Dinero.defaultCurrency = process.env.CURRENCY_CODE
-Dinero.defaultPrecision = process.env.CURRENCY_PRECISION
+Dinero.defaultCurrency = config.CurrencyCode
+Dinero.defaultPrecision = config.CurrencyPrecision
 
 const utils = require('./server_utils');
 const mongoose = require('./dbconnect');
@@ -19,9 +18,11 @@ app.use(express.urlencoded({extended: true}));
 // Parses the text as json
 app.use(express.json()); 
   
-app.listen(process.env.PORT, function() {
-    console.log('listening on ' + process.env.PORT)
+app.listen(config.ServicePort, function() {
+    console.log('listening on ' + config.ServicePort)
   })
+
+utils.SetItemsList(config['Items'], config.CurrencyCode);
 
 app.get('/', (req, res) => {
 res.sendFile(__dirname + '/index.html')
@@ -57,3 +58,9 @@ app.get('/visitorlogs', async (req, res) => {
     const [status, data] = await utils.GetVisitorLogs(req, res);
     res.status(status).send(data);
 })
+
+app.get('/items', async (req, res) => {
+    const [status, err] = await utils.GetItemsList(req, res);
+    res.status(status).send(err);
+})
+    

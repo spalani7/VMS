@@ -1,0 +1,25 @@
+{
+    "MongoDBURL": "mongodb://127.0.0.1:6789",
+    "ServicePort": 8500,
+    "allowedOrigins": "*",
+    "CurrencyCode": "INR",
+    "CurrencyPrecision": 2,
+    "Items": [
+        {
+            "Name": "Sand1",
+            "Price": 25,
+            "Units": "kg"
+        },
+        {
+            "Name": "Sand2",
+            "Price": 40,
+            "Units": "kg"
+        },
+        {
+            "Name": "Sand3",
+            "Price": 60,
+            "Units": "kg"
+        }
+    ]
+
+}

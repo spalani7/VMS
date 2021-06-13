@@ -1,37 +1,128 @@
-window.onload = function() { 
-    reqVisitorLogs();
-}
-
 let gVisitors = {};
 let gVisitorLogs = {};
+let gVisitorsToday = {};
+let gItems = {};
 
-// Populates checkout forma based on Name or vehicle No
-function checkStatusVisitor(obj){
+window.onload = function() { 
+    // need to first update visitor logs because visitors need logs to sort checkedin/checkedout based on logs
+    reqVisitorLogs();
+    reqItems();
+    reqVisitors();
+}
+$(document).ajaxStop(function(){
+    // window.location.reload();
+});
+
+function getVisitorPassId(visitorObj)
+{
+    let visitorLogIdx = -1;
+    // assuming gVisitorLogs is already sorted in descending order (starting index contains most recent ones) 
+    for(var i=0; i<gVisitorLogs.length; i++)
+    {
+        if(gVisitorLogs[i].Name == visitorObj.Name || gVisitorLogs[i].VehicleNo == visitorObj.VehicleNo){
+            visitorLogIdx = i;
+            break;
+        }
+    }
+    if(visitorLogIdx < 0) alert('Something went wrong. Visitor not found in log.')
+
+    return (visitorLogIdx >= 0) ? gVisitorLogs[visitorLogIdx].PassId : null;
+}
+
+function getItemByName(itemName)
+{
+    for(var i=0; i<gItems.length; i++)
+    {
+        if(gItems[i].Name == itemName){
+            return gItems[i]
+        }
+    }
+    alert('Item ' + itemName + ' not found.');
+    return null;
+}
+
+function getVisitorStatus(visitorObj)
+{
+    let visitorLogIdx = -1;
+    // assuming gVisitorLogs is already sorted in descending order (starting index contains most recent ones) 
+    for(var i=0; i<gVisitorLogs.length; i++)
+    {
+        if(gVisitorLogs[i].Name == visitorObj.Name || gVisitorLogs[i].VehicleNo == visitorObj.VehicleNo){
+            visitorLogIdx = i;
+            break;
+        }
+    }
+    return (visitorLogIdx >= 0) ? gVisitorLogs[visitorLogIdx].CheckedIn : false;
+}
+
+// Populates checkin/checkout forms based on Name or vehicle No
+function updateVisitorInfo(obj){
     let dashboard = document.getElementById("idVistorTable");
-    let name = (obj.id == "idVisitors") ? document.getElementById("idVisitors").value : undefined;
-    let vehicleNo = (obj.id == "idVehicles") ? document.getElementById("idVehicles").value : undefined;
-    if(name != undefined)
+    let checkIn = (obj.id == "idVisitorsIn" || obj.id == "idVehiclesIn") ? true : false;
+    let name = (obj.id == "idVisitorsIn" || obj.id == "idVisitors") ? obj.value : undefined;
+    let vehicleNo = (obj.id == "idVehiclesIn" || obj.id == "idVehicles") ? obj.value : undefined;
+    let visitorIdx = -1;
+    let visitorLogIdx = -1;
+
+    for(var i=0; i<gVisitorLogs.length; i++)
     {
-        for(var i=0; i<gVisitors.length; i++)
-        {
-            if(gVisitors[i].Name == name){
-                document.getElementById("idVehicles").value = gVisitors[i].VehicleNo;
-                document.getElementById("idPhone").value = gVisitors[i].Phone;
-                break;
-            }
+        if(gVisitorLogs[i].Name == name || gVisitorLogs[i].VehicleNo == vehicleNo){
+            visitorLogIdx = i;
+            break;
         }
     }
-    else if (vehicleNo!= undefined)
+
+    for(var i=0; i<gVisitors.length; i++)
     {
-        for(var i=0; i<gVisitors.length; i++)
-        {
-            if(gVisitors[i].VehicleNo == vehicleNo){
-                document.getElementById("idVisitors").value = gVisitors[i].Name;
-                document.getElementById("idPhone").value = gVisitors[i].Phone;
-                break;
-            }
+        if(gVisitors[i].Name == name || gVisitors[i].VehicleNo == vehicleNo){
+            visitorIdx = i;
+            break;
         }
     }
+
+    if (checkIn)
+    {
+        if (visitorLogIdx >= 0 && gVisitorLogs[visitorLogIdx].CheckedIn)
+            alert("User already checked in");
+        else
+        {
+            document.getElementById("idVisitorsIn").value = gVisitors[visitorIdx].Name;
+            document.getElementById("idVehiclesIn").value = gVisitors[visitorIdx].VehicleNo;
+            document.getElementById("idPhoneIn").value = gVisitors[visitorIdx].Phone;
+        }
+    }
+    else
+    {
+        if (visitorLogIdx < 0 || (visitorLogIdx >= 0 && !gVisitorLogs[visitorLogIdx].CheckedIn))
+            alert("User not checked-in or already checked out");
+        else
+        {
+            document.getElementById("idVisitors").value = gVisitorLogs[visitorLogIdx].Name;
+            document.getElementById("idVehicles").value = gVisitorLogs[visitorLogIdx].VehicleNo;
+            document.getElementById("idPhone").value = gVisitorLogs[visitorLogIdx].Phone;
+            document.getElementById("idEntryWeight").value = gVisitorLogs[visitorLogIdx].Trade['EntryWeight'];
+            document.getElementById("idItemReq").value = gVisitorLogs[visitorLogIdx].Trade['ItemName'];
+        }
+    }
+}
+
+function updateItemsList(items){
+
+    // update global object
+    gItems = JSON.parse(JSON.stringify(items));
+    // console.log(gItems)
+
+    let itemsListIn = document.getElementById("idItemReqIn");
+    let itemsListInLen = itemsListIn.length
+    for(var i = 1; i < itemsListInLen; i++)
+        itemsListIn.remove(i);
+
+    // populate item lists
+    gItems.forEach(function(val,index){
+        var option = document.createElement("option");
+        option.text = val.Name;
+        itemsListIn.add(option);
+    });
 }
 
 // Updates vistor table and checkout dropdown lists based on GET request data (/refresh) from server
@@ -39,8 +130,18 @@ function updateVisitorsList(visitors){
 
     // update global object
     gVisitors = JSON.parse(JSON.stringify(visitors));
+    // console.log(gVisitors)
 
     // clear old lists
+    let visitorsListIn = document.getElementById("idVisitorsIn");
+    let visitorsListInLen = visitorsListIn.length
+    for(var i = 1; i < visitorsListInLen; i++)
+        visitorsListIn.remove(i);
+    let vehiclesListIn = document.getElementById("idVehiclesIn");
+    let vehiclesListInLen = vehiclesListIn.length
+    for(var i = 1; i < vehiclesListInLen.length; i++)
+        vehiclesListIn.remove(i);
+
     let visitorsList = document.getElementById("idVisitors");
     let visitorsListLen = visitorsList.length
     for(var i = 1; i < visitorsListLen; i++)
@@ -49,18 +150,30 @@ function updateVisitorsList(visitors){
     let vehiclesListLen = vehiclesList.length
     for(var i = 1; i < vehiclesListLen.length; i++)
         vehiclesList.remove(i);
-    
+
     // populate new lists
-    visitors.forEach(function(val,index){
-        var option1 = document.createElement("option");
-        option1.text = val.Name;
-        visitorsList.add(option1);
+    gVisitors.forEach(function(val,index){
+        if (getVisitorStatus(val))
+        {
+            var option1 = document.createElement("option");
+            option1.text = val.Name;
+            visitorsList.add(option1);
 
-        var option2 = document.createElement("option");
-        option2.text = val.VehicleNo;
-        vehiclesList.add(option2);
+            var option2 = document.createElement("option");
+            option2.text = val.VehicleNo;
+            vehiclesList.add(option2);
+        }
+        else
+        {
+            var option1 = document.createElement("option");
+            option1.text = val.Name;
+            visitorsListIn.add(option1);
+
+            var option2 = document.createElement("option");
+            option2.text = val.VehicleNo;
+            vehiclesListIn.add(option2);
+        }
     });
-
 }
 
 // Updates vistor table and checkout dropdown lists based on GET request data (/refresh) from server
@@ -68,7 +181,9 @@ function updateVisitorTable(visitorlogs){
 
     // update global object
     gVisitorLogs = JSON.parse(JSON.stringify(visitorlogs));
+    // console.log(gVisitorLogs)
 
+    document.getElementById("idTotalVistsCnt").innerHTML = gVisitorLogs.length.toString();
     let dashboard = document.getElementById("idVistorTable");
 
     // delete old entries
@@ -76,18 +191,27 @@ function updateVisitorTable(visitorlogs){
     for(var i=1; i<tableRowCount; i++)
         dashboard.deleteRow(1);
 
+    gVisitorsToday = {}
     // populate new entries
-    for(var i=0; i<visitorlogs.length; i++){
+    for(var i=0; i<gVisitorLogs.length; i++){
         let row = dashboard.insertRow(i+1);
-        row.insertCell(0).innerHTML = i+1;
-        row.insertCell(1).innerHTML = visitorlogs[i].Name;
-        row.insertCell(2).innerHTML = visitorlogs[i].VehicleNo;
-        row.insertCell(3).innerHTML = visitorlogs[i].Phone;
-        row.insertCell(4).innerHTML = moment(visitorlogs[i].TimeIn).format("DD/MM/YYYY HH:mm:ss");
-        row.insertCell(5).innerHTML = moment(visitorlogs[i].TimeOut).format("DD/MM/YYYY HH:mm:ss");
+        row.insertCell(0).innerHTML = gVisitorLogs[i].PassId;
+        row.insertCell(1).innerHTML = gVisitorLogs[i].Name;
+        row.insertCell(2).innerHTML = gVisitorLogs[i].VehicleNo;
+        row.insertCell(3).innerHTML = gVisitorLogs[i].Phone;
+        row.insertCell(4).innerHTML = moment(gVisitorLogs[i].TimeIn).format("DD/MM/YYYY HH:mm:ss");
+        row.insertCell(5).innerHTML = moment(gVisitorLogs[i].TimeOut).format("DD/MM/YYYY HH:mm:ss");
+        row.insertCell(6).innerHTML = gVisitorLogs[i].Trade['ItemName'].toString();
+        row.insertCell(7).innerHTML = gVisitorLogs[i].Trade['EntryWeight'].toString() + gVisitorLogs[i].Trade.Scale.Units;
+        row.insertCell(8).innerHTML = gVisitorLogs[i].Trade['ExitWeight'].toString() + gVisitorLogs[i].Trade.Scale.Units;
 
-        let checkedin = row.insertCell(6);
-        if(visitorlogs[i].CheckedIn)
+        if (gVisitorLogs[i].VehicleNo in gVisitorsToday)
+            gVisitorsToday[gVisitorLogs[i].VehicleNo] += 1;
+        else
+            gVisitorsToday[gVisitorLogs[i].VehicleNo] = 1;
+
+        let checkedin = row.insertCell(9);
+        if(gVisitorLogs[i].CheckedIn)
         {
             checkedin.innerHTML = "CHECKED IN";
             checkedin.style.backgroundColor = "limegreen";
@@ -98,6 +222,27 @@ function updateVisitorTable(visitorlogs){
             checkedin.style.backgroundColor = "gray";
         }
     }
+    document.getElementById("idTotalVistorsCnt").innerHTML = Object.keys(gVisitorsToday).length.toString();
+}
+
+// Sends GET request to server to get all items list
+function reqItems(){
+    $.ajax({
+        type: 'GET',
+        cache: false,
+        contentType: 'application/json',
+        datatype: "json",
+        url: '/items',
+        success: function(returns){
+            if(returns)
+                updateItemsList(JSON.parse(returns));
+            else
+                alert("Fetching items failed\nError: Unknown");
+        },
+        error: function(errorMsg){
+            alert("Fetching items failed\nError: " + errorMsg.responseText);
+        }
+    });
 }
 
 // Sends GET request to server to get visitors list
@@ -112,7 +257,7 @@ function reqVisitors(){
             if(returns)
                 updateVisitorsList(JSON.parse(returns))
             else
-                alert("Fetching visitors failed due to unknown error");
+                alert("Fetching visitors failed\nError: Unknown");
         },
         error: function(errorMsg){
             alert("Fetching visitors failed\nError: " + errorMsg.responseText);
@@ -130,9 +275,9 @@ function reqVisitorLogs(){
         url: '/visitorlogs',
         success: function(returns){
             if(returns)
-                updateVisitorTable(JSON.parse(returns))
+                updateVisitorTable(JSON.parse(returns));
             else
-                alert("Fetching visitor logs failed due to unknown error");
+                alert("Fetching visitor logs failed\nError: Unknown");
         },
         error: function(errorMsg){
             alert("Fetching visitor logs failed\nError: " + errorMsg.responseText);
@@ -140,47 +285,47 @@ function reqVisitorLogs(){
     });
 }
 
-function cancelSearchVisitor(){
-    document.getElementById("idSearchForm").reset();
-    document.getElementById("idAddVisitor").disabled = true;
-}
+// function cancelSearchVisitor(){
+//     document.getElementById("idCheckinForm").reset();
+//     document.getElementById("idAddVisitor").disabled = true;
+// }
 
-function searchVisitor(){
-    let data = {};
-    data.Name = document.getElementById("idNameIn").value;
-    data.VehicleNo = document.getElementById("idVehicleNoIn").value;
-    data.Phone = document.getElementById("idPhoneIn").value;
-    $.ajax({
-        type: 'POST',
-        data: JSON.stringify(data),
-        cache: false,
-        contentType: 'application/json',
-        datatype: "json",
-        url: '/searchvisitor',
-        success: function(returns){
-            if(returns){
-                updateVisitorsList(JSON.parse(returns));
-                document.getElementById("idAddVisitor").disabled = JSON.parse(returns).length > 0;
-            }
-            else{
-                document.getElementById("idAddVisitor").disabled = false;
-                console.log(returns);
-                alert("Visitor search failed due to unknown error");
-            }
-        },
-        error: function(errorMsg){
-            console.log(errorMsg);
-            document.getElementById("idAddVisitor").disabled = false;
-            alert("Visitor search failed\nError: " + errorMsg.responseText);
-        }
-    });
-}
+// function searchVisitor(){
+//     let data = {};
+//     data.Name = document.getElementById("idNameIn").value;
+//     data.VehicleNo = document.getElementById("idVehicleNoIn").value;
+//     data.Phone = document.getElementById("idPhoneIn").value;
+//     $.ajax({
+//         type: 'POST',
+//         data: JSON.stringify(data),
+//         cache: false,
+//         contentType: 'application/json',
+//         datatype: "json",
+//         url: '/searchvisitor',
+//         success: function(returns){
+//             if(returns){
+//                 updateVisitorsList(JSON.parse(returns));
+//                 document.getElementById("idAddVisitor").disabled = JSON.parse(returns).length > 0;
+//             }
+//             else{
+//                 document.getElementById("idAddVisitor").disabled = false;
+//                 console.log(returns);
+//                 alert("Visitor search failed due to unknown error");
+//             }
+//         },
+//         error: function(errorMsg){
+//             console.log(errorMsg);
+//             document.getElementById("idAddVisitor").disabled = false;
+//             alert("Visitor search failed\nError: " + errorMsg.responseText);
+//         }
+//     });
+// }
 
 function reqAddVisitor(){
     let data = {};
-    data.Name = document.getElementById("idNameIn").value;
-    data.VehicleNo = document.getElementById("idVehicleNoIn").value;
-    data.Phone = document.getElementById("idPhoneIn").value;
+    data.Name = document.getElementById("idNameNew").value;
+    data.VehicleNo = document.getElementById("idVehicleNew").value;
+    data.Phone = document.getElementById("idPhoneNew").value;
     $.ajax({
         type: 'POST',
         data: JSON.stringify(data),
@@ -190,13 +335,13 @@ function reqAddVisitor(){
         url: '/add',
         success: function(returns){
             if(returns){
-                document.getElementById("idSearchForm").reset();
+                document.getElementById("idAddForm").reset();
                 document.getElementById("idAddVisitor").disabled = true;
-                reqVisitors();
+                updateVisitorsList(JSON.parse(returns))
             }
             else{
                 console.log(returns);
-                alert("Adding visitor failed due to unknown error");
+                alert("Adding visitor failed\nError: Unknown");
             }
         },
         error: function(errorMsg){
@@ -207,11 +352,34 @@ function reqAddVisitor(){
 }
 
 // Sends POST request to server to checkin new visitor
+$('#idCheckinForm').validator().on('submit', function (e) {
+    if (e.isDefaultPrevented()) {
+      // handle the invalid form...
+    } else {
+      // everything looks good!
+      // uncomment if you like to stop reloading page after successfull ajax request
+    //   e.preventDefault();
+      reqCheckin();
+    }
+  }
+);
+
 function reqCheckin(){
     let data = {};
-    data.Name = document.getElementById("idVisitors").value;
-    data.VehicleNo = document.getElementById("idVehicles").value;
-    data.Phone = document.getElementById("idPhone").value;
+    data.PassId = gVisitorLogs.length + 1;
+    data.Name = document.getElementById("idVisitorsIn").value;
+    data.VehicleNo = document.getElementById("idVehiclesIn").value;
+    data.Phone = document.getElementById("idPhoneIn").value;
+    var entryWeight = parseInt(document.getElementById("idEntryWeightIn").value);
+    var item = getItemByName(document.getElementById("idItemReqIn").value);
+    data.Trade = {
+        'ItemName': item.Name, 
+        'Units': item.Units, 
+        'EntryWeight': entryWeight,
+        'ExitWeight': 0,
+        'Scale': {'Price': item.Price, 'Currency': item.Currency, 'Units': item.Units}, 
+        'Payments': []
+    };
     $.ajax({
         type: 'POST',
         data: JSON.stringify(data),
@@ -221,13 +389,13 @@ function reqCheckin(){
         url: '/checkin',
         success: function(returns){
             if(returns){
-                document.getElementById("idSearchForm").reset();
-                document.getElementById("idExecForm").reset();
-                reqVisitorLogs();
+                document.getElementById("idCheckinForm").reset();
+                document.getElementById("idCheckoutForm").reset();
+                // document.getElementById("idCheckInBut").disabled = true;
             }
             else{
                 console.log(returns);
-                alert("Error: Checkin failed due to unknown error");
+                alert("Checkin failed\nError: Unknown");
             }
         },
         error: function(errorMsg){
@@ -238,18 +406,44 @@ function reqCheckin(){
 };
 
 // Sends POST request to server to checkout visitor
+$('#idCheckoutForm').validator().on('submit', function (e) {
+    if (e.isDefaultPrevented()) {
+      // handle the invalid form...
+    } else {
+      // everything looks good!
+
+      // uncomment if you like to stop reloading page after successfull ajax request
+      //   e.preventDefault();
+      reqCheckout();
+    }
+  }
+);
+
 function reqCheckout(){
+
     let data = {};
     data.Name = document.getElementById("idVisitors").value;
     data.VehicleNo = document.getElementById("idVehicles").value;
     data.Phone = document.getElementById("idPhone").value;
+    var entryWeight = parseInt(document.getElementById("idEntryWeight").value);
+    var exitWeight = parseInt(document.getElementById("idExitWeight").value);
+    if(exitWeight < entryWeight) 
+    {
+        alert("Checkout failed\nError: Exit weight should be greater than Entry weight");
+        return;
+    }
+    var item = getItemByName(document.getElementById("idItemReq").value);
     data.Trade = {
-        'name': 'C Sand', 
-        'quantity': 10, 
-        'units': 'kg', 
-        'scale': {'price': 45, 'Currency': 'INR', 'per': 'kg'}, 
-        'totalPrice': 678
+        'ItemName': item.Name, 
+        'Units': item.Units, 
+        'EntryWeight': entryWeight,
+        'ExitWeight': exitWeight,
+        'Scale': {'Price': item.Price, 'Currency': item.Currency, 'Units': item.Units}, 
+        'Payments': [{'Amount': (exitWeight-entryWeight) * item.Price, 'PaymentType': 'Cash'}]
     };
+    // finds pass ID from the log
+    data.PassId = getVisitorPassId(data);
+    
     $.ajax({
         type: 'POST',
         data: JSON.stringify(data),
@@ -259,13 +453,13 @@ function reqCheckout(){
         url: '/checkout',
         success: function(returns){
             if(returns){
-                document.getElementById("idSearchForm").reset();
-                document.getElementById("idExecForm").reset();
-                reqVisitorLogs();
+                document.getElementById("idCheckinForm").reset();
+                document.getElementById("idCheckoutForm").reset();
+                // document.getElementById("idCheckOutBut").disabled = true;
             }
             else{
                 console.log(returns);
-                alert("Error: Checkout failed due to unknown error");
+                alert("Checkout failed\nError: Unknown");
             }
         },
         error: function(errorMsg){
