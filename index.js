@@ -24,6 +24,10 @@ app.listen(config.ServicePort, function() {
 
 utils.SetItemsList(config['Items'], config.CurrencyCode);
 
+process.on('unhandledRejection', (reason, promise) => {
+    console.log("Reason: ",reason,"promise: ",promise);
+ })
+ 
 app.get('/', (req, res) => {
 res.sendFile(__dirname + '/index.html')
 // Note: __dirname is the current directory you're in. 

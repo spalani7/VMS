@@ -134,21 +134,27 @@ module.exports.AddVisitor = async function(req, res){
     // check if visitor already available
     const docs = await dbVistorLog.find(visitor, null);
     if (docs.length > 0)
-        return [400, 'User already in database'];
+    {
+        res.status(400).send('User already in database');
+        return;
+    }
 
     // validate schema
     var newVisitor = new dbVistor(visitor);
     let error = newVisitor.validateSync();
-    if(error) return [400, error['message']];
+    if(error) {
+        res.status(400).send(error['message']);
+        return;
+    }
 
     // Save new visitor to database
     newVisitor.save()
     .then(async (user) => {
         const docs = await dbVistor.find({}, null, {sort: {TimeIn: -1}});
-        res.send(200, JSON.stringify(docs));
+        res.status(200).send(JSON.stringify(docs));
     })
     .catch((error) => {
-        res.send(400, err);
+        res.status(400).send(err);
     });
 }
 
@@ -162,7 +168,8 @@ module.exports.Checkin = async function(req, res){
     if (docs.length > 0)
     {
         // console.log("Visitor already checked in today\n" + docs);
-        return [400, 'User already checked in today'];
+        res.status(400).send('User already checked in today');
+        return;
     }
 
     // var tradeList = [];
@@ -187,17 +194,20 @@ module.exports.Checkin = async function(req, res){
     });
 
     let error = newVisitorLog.validateSync();
-    if(error) return [400, error['message']];
+    if(error) {
+        res.status(400).send(error['message']);
+        return;
+    }
     console.log("Checking in: " + newVisitorLog);
 
     // Save new visitor to database
     newVisitorLog.save()
     .then(async (user) => {
         const docs = await dbVistorLog.find(dbFilter, null, {sort: {TimeIn: -1}});
-        res.send(200, JSON.stringify(docs));
+        res.status(200).send(JSON.stringify(docs));
     })
     .catch((error) => {
-        res.send(400, err);
+        res.status(400).send(err);
     });
 }
 
