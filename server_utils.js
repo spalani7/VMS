@@ -143,7 +143,7 @@ module.exports.AddVisitor = async function(req, res){
 
     // Save new visitor to database
     newVisitor.save()
-    .then((user) => {
+    .then(async (user) => {
         const docs = await dbVistor.find({}, null, {sort: {TimeIn: -1}});
         res.send(200, JSON.stringify(docs));
     })
@@ -192,7 +192,7 @@ module.exports.Checkin = async function(req, res){
 
     // Save new visitor to database
     newVisitorLog.save()
-    .then((user) => {
+    .then(async (user) => {
         const docs = await dbVistorLog.find(dbFilter, null, {sort: {TimeIn: -1}});
         res.send(200, JSON.stringify(docs));
     })
