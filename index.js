@@ -34,11 +34,11 @@ res.sendFile(__dirname + '/index.html')
 })
 
 app.post('/add', async (req, res) => {
-    const [status, err] = await utils.AddVisitor(req, res);
+    await utils.AddVisitor(req, res);
 })
     
 app.post('/checkin', async (req, res) => {
-    const [status, err] = await utils.Checkin(req, res);
+    await utils.Checkin(req, res);
 })
     
 app.post('/checkout', async (req, res) => {
