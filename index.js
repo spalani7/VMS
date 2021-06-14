@@ -31,12 +31,10 @@ res.sendFile(__dirname + '/index.html')
 
 app.post('/add', async (req, res) => {
     const [status, err] = await utils.AddVisitor(req, res);
-    res.status(status).send(err);
 })
     
 app.post('/checkin', async (req, res) => {
     const [status, err] = await utils.Checkin(req, res);
-    res.status(status).send(err);
 })
     
 app.post('/checkout', async (req, res) => {

@@ -142,17 +142,14 @@ module.exports.AddVisitor = async function(req, res){
     if(error) return [400, error['message']];
 
     // Save new visitor to database
-    newVisitor.save(async function(err) {
-        if(err) return [400, err];
-        else {
-            const docs = await dbVistor.find({}, null, {sort: {TimeIn: -1}});
-            // console.log(docs);
-            return [200, JSON.stringify(docs)];
-        }
+    newVisitor.save()
+    .then((user) => {
+        const docs = await dbVistor.find({}, null, {sort: {TimeIn: -1}});
+        res.send(200, JSON.stringify(docs));
+    })
+    .catch((error) => {
+        res.send(400, err);
     });
-
-    const retdocs = await dbVistor.find({}, null, {sort: {TimeIn: -1}});
-    return [200, JSON.stringify(retdocs)];
 }
 
 module.exports.Checkin = async function(req, res){
@@ -194,17 +191,14 @@ module.exports.Checkin = async function(req, res){
     console.log("Checking in: " + newVisitorLog);
 
     // Save new visitor to database
-    newVisitorLog.save(async function(err) {
-        if(err) return [400, err];
-        else {
-            // send checkin log from database as response
-            const docs = await dbVistorLog.find(dbFilter, null, {sort: {TimeIn: -1}});
-            return [200, JSON.stringify(docs)];
-        }
+    newVisitorLog.save()
+    .then((user) => {
+        const docs = await dbVistorLog.find(dbFilter, null, {sort: {TimeIn: -1}});
+        res.send(200, JSON.stringify(docs));
+    })
+    .catch((error) => {
+        res.send(400, err);
     });
-
-    const retdocs = await dbVistorLog.find(dbFilter, null, {sort: {TimeIn: -1}});
-    return [200, JSON.stringify(retdocs)];
 }
 
 module.exports.Checkout = async function(req, res){
