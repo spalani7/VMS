@@ -476,118 +476,127 @@ function reqCheckout(){
 function createCheckinInvoice(data) {
     var doc = new jspdf.jsPDF();
 
-    if (data == null)
-    {
-        data = {}
-        data.PassId = 70;
-        data.Name = 'Vinay';
-        data.VehicleNo = 'KA 6789';
-        data.Trade = {};
-        data.Trade.Scale = {}
-        data.Trade.Units = 'Kg';
-        data.Trade.EntryWeight = 60;
-        data.Trade.ExitWeight = 80;
-        data.Trade.ItemName = 'C Sand';
-        data.Trade.Scale.Price = 20;
-        data.Trade.Scale.Currency = 'INR';
+    // if (data == null)
+    // {
+    //     data = {}
+    //     data.PassId = 70;
+    //     data.Name = 'Vinay';
+    //     data.VehicleNo = 'KA 6789';
+    //     data.Trade = {};
+    //     data.Trade.Scale = {}
+    //     data.Trade.Units = 'Kg';
+    //     data.Trade.EntryWeight = 60;
+    //     data.Trade.ExitWeight = 80;
+    //     data.Trade.ItemName = 'C Sand';
+    //     data.Trade.Scale.Price = 20;
+    //     data.Trade.Scale.Currency = 'INR';
+    // }
+    try {
+        doc.deletePage(1);
+        doc.setFontSize(20);
+        doc.addPage("a6", "l");
+        // draw lines
+        doc.rect(10, 10, 130, 15);
+        doc.rect(10, 25, 130, 20);
+        doc.rect(10, 45, 130, 10);
+        doc.rect(10, 45, 100, 10);
+        doc.rect(10, 45, 70, 10);
+        doc.rect(10, 55, 130, 40);
+        doc.rect(10, 55, 100, 40);
+        doc.rect(10, 55, 70, 40);
+        doc.rect(10, 90, 130, 5);
+        doc.text('Check-in Pass', 50, 20);
+        doc.setFontSize(10);
+        doc.text("No: " + data.PassId, 20, 30);
+        doc.text("Date: " + moment(Date.now()).format("DD/MM/YYYY HH:mm:ss"), 80, 30);
+        doc.text("Name: " + data.Name, 20, 35);
+        doc.text("Vehicle No: " + data.VehicleNo, 80, 35);
+        doc.text("Entry Weight: " + data.Trade.EntryWeight + " " + data.Trade.Units, 20, 40);
+        doc.text("Exit Weight: -" + " " + data.Trade.Units, 80, 40);
+        
+        doc.text("Item(s)", 20, 50);
+        doc.text("Qty", 90, 50);
+        doc.text("Amount", 120, 50);
+        doc.text("" + data.Trade.ItemName, 20, 60);
+        doc.text("-", 90, 60);
+        doc.text("-", 120, 60);
+
+        doc.text("Total", 30, 93);
+        doc.text("-", 90, 93);
+        doc.text("-", 120, 93);
+
+        // doc.autoPrint();
+        // auto print not working.. workaround below
+        window.open(doc.output('bloburl'), '_blank')
+        // doc.save("sss.pdf");
+        document.getElementById('idInvoiceFrame').src = doc.output('bloburl');
     }
-    doc.deletePage(1);
-    doc.setFontSize(20);
-    doc.addPage("a6", "l");
-    // draw lines
-    doc.rect(10, 10, 130, 15);
-    doc.rect(10, 25, 130, 20);
-    doc.rect(10, 45, 130, 10);
-    doc.rect(10, 45, 100, 10);
-    doc.rect(10, 45, 70, 10);
-    doc.rect(10, 55, 130, 40);
-    doc.rect(10, 55, 100, 40);
-    doc.rect(10, 55, 70, 40);
-    doc.rect(10, 90, 130, 5);
-    doc.text('Check-in Pass', 50, 20);
-    doc.setFontSize(10);
-    doc.text("No: " + data.PassId, 20, 30);
-    doc.text("Date: " + moment(Date.now()).format("DD/MM/YYYY HH:mm:ss"), 80, 30);
-    doc.text("Name: " + data.Name, 20, 35);
-    doc.text("Vehicle No: " + data.VehicleNo, 80, 35);
-    doc.text("Entry Weight: " + data.Trade.EntryWeight + " " + data.Trade.Units, 20, 40);
-    doc.text("Exit Weight: -" + " " + data.Trade.Units, 80, 40);
-    
-    doc.text("Item(s)", 20, 50);
-    doc.text("Qty", 90, 50);
-    doc.text("Amount", 120, 50);
-    doc.text("" + data.Trade.ItemName, 20, 60);
-    doc.text("-", 90, 60);
-    doc.text("-", 120, 60);
-
-    doc.text("Total", 30, 93);
-    doc.text("-", 90, 93);
-    doc.text("-", 120, 93);
-
-    // doc.autoPrint();
-    // auto print not working.. workaround below
-    window.open(doc.output('bloburl'), '_blank')
-    // doc.save("sss.pdf");
-    document.getElementById('idInvoiceFrame').src = doc.output('bloburl');
+    catch (e) {
+        alert("Creating checkout invoice failed.\nException: " + e);
+    }
 }
 
 function createCheckoutInvoice(data) {
     var doc = new jspdf.jsPDF();
 
-    if (data == null)
-    {
-        data = {}
-        data.PassId = 70;
-        data.Name = 'Vinay';
-        data.VehicleNo = 'KA 6789';
-        data.Trade = {};
-        data.Trade.Scale = {}
-        data.Trade.Units = 'Kg';
-        data.Trade.EntryWeight = 60;
-        data.Trade.ExitWeight = 80;
-        data.Trade.ItemName = 'C Sand';
-        data.Trade.Scale.Price = 20;
-        data.Trade.Scale.Currency = 'INR';
+    // if (data == null)
+    // {
+    //     data = {}
+    //     data.PassId = 70;
+    //     data.Name = 'Vinay';
+    //     data.VehicleNo = 'KA 6789';
+    //     data.Trade = {};
+    //     data.Trade.Scale = {}
+    //     data.Trade.Units = 'Kg';
+    //     data.Trade.EntryWeight = 60;
+    //     data.Trade.ExitWeight = 80;
+    //     data.Trade.ItemName = 'C Sand';
+    //     data.Trade.Scale.Price = 20;
+    //     data.Trade.Scale.Currency = 'INR';
+    // }
+    try {
+        doc.deletePage(1);
+        doc.setFontSize(20);
+        doc.addPage("a6", "l");
+        // draw lines
+        doc.rect(10, 10, 130, 15);
+        doc.rect(10, 25, 130, 20);
+        doc.rect(10, 45, 130, 10);
+        doc.rect(10, 45, 100, 10);
+        doc.rect(10, 45, 70, 10);
+        doc.rect(10, 55, 130, 40);
+        doc.rect(10, 55, 100, 40);
+        doc.rect(10, 55, 70, 40);
+        doc.rect(10, 90, 130, 5);
+        doc.text('Check-out Pass', 50, 20);
+        doc.setFontSize(10);
+        doc.text("No: " + data.PassId, 20, 30);
+        doc.text("Date: " + moment(Date.now()).format("DD/MM/YYYY HH:mm:ss"), 80, 30);
+        doc.text("Name: " + data.Name, 20, 35);
+        doc.text("Vehicle No: " + data.VehicleNo, 80, 35);
+        doc.text("Entry Weight: " + data.Trade.EntryWeight + " " + data.Trade.Units, 20, 40);
+        doc.text("Exit Weight: " + data.Trade.ExitWeight + " " + data.Trade.Units, 80, 40);
+        
+        doc.text("Item(s)", 20, 50);
+        doc.text("Qty", 90, 50);
+        doc.text("Amount", 120, 50);
+        doc.text("" + data.Trade.ItemName, 20, 60);
+        var qty = data.Trade.ExitWeight - data.Trade.EntryWeight;
+        var amt = qty * data.Trade.Scale.Price;
+        doc.text("" + qty + " " + data.Trade.Units, 90, 60);
+        doc.text(data.Trade.Scale.Currency + " " + amt, 120, 60);
+
+        doc.text("Total", 30, 93);
+        doc.text("" + qty + " " + data.Trade.Units, 90, 93);
+        doc.text(data.Trade.Scale.Currency + " " + amt, 120, 93);
+
+        // doc.autoPrint();
+        // auto print not working.. workaround below
+        window.open(doc.output('bloburl'), '_blank')
+        // doc.save("sss.pdf");
+        document.getElementById('idInvoiceFrame').src = doc.output('bloburl');
     }
-
-    doc.deletePage(1);
-    doc.setFontSize(20);
-    doc.addPage("a6", "l");
-    // draw lines
-    doc.rect(10, 10, 130, 15);
-    doc.rect(10, 25, 130, 20);
-    doc.rect(10, 45, 130, 10);
-    doc.rect(10, 45, 100, 10);
-    doc.rect(10, 45, 70, 10);
-    doc.rect(10, 55, 130, 40);
-    doc.rect(10, 55, 100, 40);
-    doc.rect(10, 55, 70, 40);
-    doc.rect(10, 90, 130, 5);
-    doc.text('Check-out Pass', 50, 20);
-    doc.setFontSize(10);
-    doc.text("No: " + data.PassId, 20, 30);
-    doc.text("Date: " + moment(Date.now()).format("DD/MM/YYYY HH:mm:ss"), 80, 30);
-    doc.text("Name: " + data.Name, 20, 35);
-    doc.text("Vehicle No: " + data.VehicleNo, 80, 35);
-    doc.text("Entry Weight: " + data.Trade.EntryWeight + " " + data.Trade.Units, 20, 40);
-    doc.text("Exit Weight: " + data.Trade.ExitWeight + " " + data.Trade.Units, 80, 40);
-    
-    doc.text("Item(s)", 20, 50);
-    doc.text("Qty", 90, 50);
-    doc.text("Amount", 120, 50);
-    doc.text("" + data.Trade.ItemName, 20, 60);
-    var qty = data.Trade.ExitWeight - data.Trade.EntryWeight;
-    var amt = qty * data.Trade.Scale.Price;
-    doc.text("" + qty + " " + data.Trade.Units, 90, 60);
-    doc.text(data.Trade.Scale.Currency + " " + amt, 120, 60);
-
-    doc.text("Total", 30, 93);
-    doc.text("" + qty + " " + data.Trade.Units, 90, 93);
-    doc.text(data.Trade.Scale.Currency + " " + amt, 120, 93);
-
-    // doc.autoPrint();
-    // auto print not working.. workaround below
-    window.open(doc.output('bloburl'), '_blank')
-    // doc.save("sss.pdf");
-    document.getElementById('idInvoiceFrame').src = doc.output('bloburl');
+    catch (e) {
+        alert("Creating checkout invoice failed.\nException: " + e);
+    }
 }
