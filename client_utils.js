@@ -376,7 +376,7 @@ function reqCheckin(){
     data.Name = document.getElementById("idVisitorsIn").value;
     data.VehicleNo = document.getElementById("idVehiclesIn").value;
     data.Phone = document.getElementById("idPhoneIn").value;
-    var entryWeight = parseInt(document.getElementById("idEntryWeightIn").value);
+    var entryWeight = parseFloat(document.getElementById("idEntryWeightIn").value);
     var item = getItemByName(document.getElementById("idItemReqIn").value);
     data.Trade = {
         'ItemName': item.Name, 
@@ -433,8 +433,8 @@ function reqCheckout(){
     data.Name = document.getElementById("idVisitors").value;
     data.VehicleNo = document.getElementById("idVehicles").value;
     data.Phone = document.getElementById("idPhone").value;
-    var entryWeight = parseInt(document.getElementById("idEntryWeight").value);
-    var exitWeight = parseInt(document.getElementById("idExitWeight").value);
+    var entryWeight = parseFloat(document.getElementById("idEntryWeight").value);
+    var exitWeight = parseFloat(document.getElementById("idExitWeight").value);
     if(exitWeight < entryWeight) 
     {
         alert("Checkout failed\nError: Exit weight should be greater than Entry weight");
