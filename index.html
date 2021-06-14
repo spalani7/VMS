@@ -13,9 +13,9 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap-theme.min.css" integrity="sha384-6pzBo3FDv/PJ8r2KRkGHifhEocL+1X2rVCTTkUfGk7/0pbek5mMa1upzvWbrUbOZ" crossorigin="anonymous">
     <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous"> -->
     <link rel="stylesheet" type="text/css" href="styles.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.26.0/moment.min.js"></script>
+    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script> -->
+
   </head>
   <body>
     <div class="container">
@@ -38,6 +38,7 @@
       <ul class="nav nav-tabs">
         <li class="active"><a data-toggle="tab" role="tab" href="#idMainTab">Main</a></li>
         <li><a data-toggle="tab" role="tab" href="#idSettingsTab">Settings</a></li>
+        <!-- <li><a data-toggle="tab" role="tab" href="#idInvoiceTab">Invoice</a></li> -->
       </ul>
 
       <div class="tab-content">
@@ -67,17 +68,17 @@
                       </div><br>
 
                       <div class="input-group">
-                        <span class="input-group-addon">Entry Weight</span>
-                        <input type="number" class="form-control" id="idEntryWeightIn" pattern="^[+]?([0-9]+(?:[\.][0-9]*)?|\.[0-9]+)$" data-error="Only positive numbers allowed" required>
-                      </div><br>
-                      
-                      <div class="input-group">
                         <span class="input-group-addon">Item</span>
                         <select class="form-control" id="idItemReqIn" required><option hidden disabled selected value> -- select an option -- </option></select>
                       </div><br>
 
                       <div class="input-group">
-                        <span class="input-group-addon">Exit Weight</span>
+                        <span class="input-group-addon">Entry Weight (Kg)</span>
+                        <input type="number" class="form-control" id="idEntryWeightIn" pattern="^[+]?([0-9]+(?:[\.][0-9]*)?|\.[0-9]+)$" data-error="Only positive numbers allowed" required>
+                      </div><br>
+                      
+                      <div class="input-group">
+                        <span class="input-group-addon">Exit Weight (Kg)</span>
                         <input type="number" class="form-control" id="idExitWeightIn" readonly>
                       </div><br>
 
@@ -112,17 +113,17 @@
                       </div><br>
                       
                       <div class="input-group">
-                        <span class="input-group-addon">Entry weight</span>
-                        <input type="number" class="form-control" id="idEntryWeight" readonly>
-                      </div><br>
-
-                      <div class="input-group">
                         <span class="input-group-addon">Item</span>
                         <input type="text" class="form-control" id="idItemReq" readonly>
                       </div><br>
 
                       <div class="input-group">
-                        <span class="input-group-addon">Exit Weight</span>
+                        <span class="input-group-addon">Entry weight (Kg)</span>
+                        <input type="number" class="form-control" id="idEntryWeight" readonly>
+                      </div><br>
+
+                      <div class="input-group">
+                        <span class="input-group-addon">Exit Weight (Kg)</span>
                         <input type="number" class="form-control" id="idExitWeight" pattern="^[+]?([0-9]+(?:[\.][0-9]*)?|\.[0-9]+)$" data-error="Only positive numbers allowed" required>
                       </div><br>
                       
@@ -152,6 +153,7 @@
                                 <th>Item</th>
                                 <th>Entry wt</th>
                                 <th>Exit wt</th>
+                                <th>Amount</th>
                                 <th>Status</th>
                               </tr>
                           </thead>
@@ -197,14 +199,19 @@
             </div>
           </div>
         </div>
+
+        <!-- <div id="idInvoiceTab" class="tab-pane fade in panel panel-default" role="tabpanel">
+          <iframe id='idInvoiceFrame' frameborder='0' style='border:0;' width='900' height='400'></iframe>
+        </div> -->
       </div>
     </div>
     <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.26.0/moment.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
     <!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script> -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.9/validator.min.js"></script>
-    
     <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.9/validator.min.js"></script>
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
     <script src="client_utils.js"></script>
   </body>
 </html>

@@ -150,6 +150,9 @@ module.exports.AddVisitor = async function(req, res){
             return [200, JSON.stringify(docs)];
         }
     });
+
+    const retdocs = await dbVistor.find({}, null, {sort: {TimeIn: -1}});
+    return [200, JSON.stringify(retdocs)];
 }
 
 module.exports.Checkin = async function(req, res){
@@ -195,12 +198,13 @@ module.exports.Checkin = async function(req, res){
         if(err) return [400, err];
         else {
             // send checkin log from database as response
-            const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             const docs = await dbVistorLog.find(dbFilter, null, {sort: {TimeIn: -1}});
             return [200, JSON.stringify(docs)];
         }
     });
+
+    const retdocs = await dbVistorLog.find(dbFilter, null, {sort: {TimeIn: -1}});
+    return [200, JSON.stringify(retdocs)];
 }
 
 module.exports.Checkout = async function(req, res){
