@@ -1,5 +1,6 @@
 const mongoose = require('./dbconnect');
 // const AutoIncrement = require('mongoose-sequence')(mongoose);
+const delay = ms => new Promise(res => setTimeout(res, ms));
 
 var VisitorSchema = new mongoose.Schema({
     Date:{ type: Date, default: Date.now() },
@@ -135,7 +136,7 @@ module.exports.AddVisitor = async function(req, res){
     const docs = await dbVistorLog.find(visitor, null);
     if (docs.length > 0)
     {
-        res.status(400).send('User already in database');
+        await res.status(400).send('User already in database');
         return;
     }
 
@@ -143,19 +144,20 @@ module.exports.AddVisitor = async function(req, res){
     var newVisitor = new dbVistor(visitor);
     let error = newVisitor.validateSync();
     if(error) {
-        res.status(400).send(error['message']);
+        await res.status(400).send(error['message']);
         return;
     }
 
     // Save new visitor to database
-    newVisitor.save()
-    .then(async (user) => {
-        const docs = await dbVistor.find({}, null, {sort: {TimeIn: -1}});
-        res.status(200).send(JSON.stringify(docs));
-    })
-    .catch((error) => {
-        res.status(400).send(err);
-    });
+    try {
+        await newVisitor.save();
+        // const docs = await dbVistor.find({}, null, {sort: {TimeIn: -1}});
+        await res.status(200).send("OK");
+    }
+    catch(e)
+    {
+        await res.status(400).send(JSON.stringify(e));
+    }
 }
 
 module.exports.Checkin = async function(req, res){
@@ -168,7 +170,7 @@ module.exports.Checkin = async function(req, res){
     if (docs.length > 0)
     {
         // console.log("Visitor already checked in today\n" + docs);
-        res.status(400).send('User already checked in today');
+        await res.status(400).send('User already checked in today');
         return;
     }
 
@@ -195,20 +197,23 @@ module.exports.Checkin = async function(req, res){
 
     let error = newVisitorLog.validateSync();
     if(error) {
-        res.status(400).send(error['message']);
+        await res.status(400).send(error['message']);
         return;
     }
     console.log("Checking in: " + JSON.stringify(req.body));
 
     // Save new visitor to database
-    newVisitorLog.save()
-    .then(async (user) => {
-        const docs = await dbVistorLog.find(dbFilter, null, {sort: {TimeIn: -1}});
-        res.status(200).send(JSON.stringify(docs));
-    })
-    .catch((error) => {
-        res.status(400).send(err);
-    });
+    try
+    {
+        await newVisitorLog.save()
+        // const docs = await dbVistorLog.find(dbFilter, null, {sort: {TimeIn: -1}});
+        await res.status(200).send("OK");
+    }
+    catch(e)
+    {
+        console.log(e);
+        await res.status(400).send(JSON.stringify(e));
+    }
 }
 
 module.exports.Checkout = async function(req, res){
@@ -256,9 +261,9 @@ module.exports.Checkout = async function(req, res){
     else 
     {
         // send checkout log from database  as response
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const docs = await dbVistorLog.find({Name:req.body.Name, VehicleNo:req.body.VehicleNo, Phone:req.body.Phone, TimeIn:{$gte: today}}, null, {sort: {TimeIn: -1}});
-        return [200, JSON.stringify(docs)];
+        // const now = new Date();
+        // const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        // const docs = await dbVistorLog.find({Name:req.body.Name, VehicleNo:req.body.VehicleNo, Phone:req.body.Phone, TimeIn:{$gte: today}}, null, {sort: {TimeIn: -1}});
+        return [200, "OK"];
     }
 }

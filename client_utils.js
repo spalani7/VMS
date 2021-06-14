@@ -232,6 +232,7 @@ function reqItems(){
     $.ajax({
         type: 'GET',
         cache: false,
+        async: false,
         contentType: 'application/json',
         datatype: "json",
         url: '/items',
@@ -252,6 +253,7 @@ function reqVisitors(){
     $.ajax({
         type: 'GET',
         cache: false,
+        async: false,
         contentType: 'application/json',
         datatype: "json",
         url: '/visitors',
@@ -272,6 +274,7 @@ function reqVisitorLogs(){
     $.ajax({
         type: 'GET',
         cache: false,
+        async: false,
         contentType: 'application/json',
         datatype: "json",
         url: '/visitorlogs',
@@ -332,6 +335,7 @@ function reqAddVisitor(){
         type: 'POST',
         data: JSON.stringify(data),
         cache: false,
+        async: false,
         contentType: 'application/json',
         datatype: "json",
         url: '/add',
@@ -386,6 +390,7 @@ function reqCheckin(){
         type: 'POST',
         data: JSON.stringify(data),
         cache: false,
+        async: false,
         contentType: 'application/json',
         datatype: "json",
         url: '/checkin',
@@ -451,6 +456,7 @@ function reqCheckout(){
         type: 'POST',
         data: JSON.stringify(data),
         cache: false,
+        async: false,
         contentType: 'application/json',
         datatype: "json",
         url: '/checkout',
@@ -474,7 +480,6 @@ function reqCheckout(){
 };
 
 function createCheckinInvoice(data) {
-    var doc = new jspdf.jsPDF();
 
     // if (data == null)
     // {
@@ -492,6 +497,7 @@ function createCheckinInvoice(data) {
     //     data.Trade.Scale.Currency = 'INR';
     // }
     try {
+        var doc = new jspdf.jsPDF();
         doc.deletePage(1);
         doc.setFontSize(20);
         doc.addPage("a6", "l");
@@ -537,7 +543,6 @@ function createCheckinInvoice(data) {
 }
 
 function createCheckoutInvoice(data) {
-    var doc = new jspdf.jsPDF();
 
     // if (data == null)
     // {
@@ -555,6 +560,7 @@ function createCheckoutInvoice(data) {
     //     data.Trade.Scale.Currency = 'INR';
     // }
     try {
+        var doc = new jspdf.jsPDF();
         doc.deletePage(1);
         doc.setFontSize(20);
         doc.addPage("a6", "l");
