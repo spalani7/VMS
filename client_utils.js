@@ -204,7 +204,8 @@ function updateVisitorTable(visitorlogs){
         row.insertCell(6).innerHTML = gVisitorLogs[i].Trade['ItemName'].toString();
         row.insertCell(7).innerHTML = gVisitorLogs[i].Trade['EntryWeight'].toString() + gVisitorLogs[i].Trade.Scale.Units;
         row.insertCell(8).innerHTML = gVisitorLogs[i].Trade['ExitWeight'].toString() + gVisitorLogs[i].Trade.Scale.Units;
-        row.insertCell(9).innerHTML = gVisitorLogs[i].Trade.Scale.Currency + " " + ((gVisitorLogs[i].Trade['ExitWeight'] - gVisitorLogs[i].Trade['EntryWeight']) * gVisitorLogs[i].Trade.Scale.Price).toString();
+        var amt = (gVisitorLogs[i].Trade['ExitWeight'] < gVisitorLogs[i].Trade['EntryWeight']) ? 0 : (gVisitorLogs[i].Trade['ExitWeight'] - gVisitorLogs[i].Trade['EntryWeight']) * gVisitorLogs[i].Trade.Scale.Price;
+        row.insertCell(9).innerHTML = gVisitorLogs[i].Trade.Scale.Currency + " " + (amt).toString();
 
         if (gVisitorLogs[i].VehicleNo in gVisitorsToday)
             gVisitorsToday[gVisitorLogs[i].VehicleNo] += 1;
