@@ -198,7 +198,7 @@ module.exports.Checkin = async function(req, res){
         res.status(400).send(error['message']);
         return;
     }
-    console.log("Checking in: " + newVisitorLog);
+    console.log("Checking in: " + JSON.stringify(req.body));
 
     // Save new visitor to database
     newVisitorLog.save()
@@ -249,7 +249,10 @@ module.exports.Checkout = async function(req, res){
         // }
     );
 
-    if(doc == null) return [400, "Visitor checkin not found\n" + JSON.stringify(req.body)];
+    if(doc == null) {
+        console.log("Visitor checkin not found\n");
+        return [400, "Visitor checkin not found\n" + JSON.stringify(req.body)];
+    }
     else 
     {
         // send checkout log from database  as response
