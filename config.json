@@ -19,6 +19,16 @@
             "Name": "Sand3",
             "Price": 60,
             "Units": "kg"
+        },
+        {
+            "Name": "Sand4",
+            "Price": 60,
+            "Units": "cuft"
+        },
+        {
+            "Name": "Sand5",
+            "Price": 600,
+            "Units": "tonne"
         }
     ]
 

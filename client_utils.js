@@ -13,6 +13,15 @@ $(document).ajaxStop(function(){
     // window.location.reload();
 });
 
+function setSelectedValue(selectObj, valueToSet) {
+    for (var i = 0; i < selectObj.options.length; i++) {
+        if (selectObj.options[i].text== valueToSet) {
+            selectObj.options[i].selected = true;
+            return;
+        }
+    }
+}
+
 function getVisitorPassId(visitorObj)
 {
     let visitorLogIdx = -1;
@@ -101,6 +110,8 @@ function updateVisitorInfo(obj){
             document.getElementById("idVehicles").value = gVisitorLogs[visitorLogIdx].VehicleNo;
             document.getElementById("idPhone").value = gVisitorLogs[visitorLogIdx].Phone;
             document.getElementById("idEntryWeight").value = gVisitorLogs[visitorLogIdx].Trade['EntryWeight'];
+            document.getElementById("idEntryWeightUnits").innerHTML = gVisitorLogs[visitorLogIdx].Trade['Units'];
+            document.getElementById("idExitWeightUnits").innerHTML = gVisitorLogs[visitorLogIdx].Trade['Units'];
             document.getElementById("idItemReq").value = gVisitorLogs[visitorLogIdx].Trade['ItemName'];
         }
     }
@@ -202,10 +213,26 @@ function updateVisitorTable(visitorlogs){
         row.insertCell(4).innerHTML = moment(gVisitorLogs[i].TimeIn).format("DD/MM/YYYY HH:mm:ss");
         row.insertCell(5).innerHTML = moment(gVisitorLogs[i].TimeOut).format("DD/MM/YYYY HH:mm:ss");
         row.insertCell(6).innerHTML = gVisitorLogs[i].Trade['ItemName'].toString();
-        row.insertCell(7).innerHTML = gVisitorLogs[i].Trade['EntryWeight'].toString() + gVisitorLogs[i].Trade.Scale.Units;
-        row.insertCell(8).innerHTML = gVisitorLogs[i].Trade['ExitWeight'].toString() + gVisitorLogs[i].Trade.Scale.Units;
-        var amt = (gVisitorLogs[i].Trade['ExitWeight'] < gVisitorLogs[i].Trade['EntryWeight']) ? 0 : (gVisitorLogs[i].Trade['ExitWeight'] - gVisitorLogs[i].Trade['EntryWeight']) * gVisitorLogs[i].Trade.Scale.Price;
-        row.insertCell(9).innerHTML = gVisitorLogs[i].Trade.Scale.Currency + " " + (amt).toString();
+        row.insertCell(7).innerHTML = gVisitorLogs[i].Trade['EntryWeight'].toString() + gVisitorLogs[i].Trade.Units;
+        row.insertCell(8).innerHTML = gVisitorLogs[i].Trade['ExitWeight'].toString() + gVisitorLogs[i].Trade.Units;
+        var weightDiff = (gVisitorLogs[i].Trade['ExitWeight'] < gVisitorLogs[i].Trade['EntryWeight']) ? 0 : (gVisitorLogs[i].Trade['ExitWeight'] - gVisitorLogs[i].Trade['EntryWeight']);
+        // console.log(weightDiff)
+        
+        var weightUnit = math.unit(weightDiff, gVisitorLogs[i].Trade.Units);
+        // console.log(gVisitorLogs[i].Trade.Units, gVisitorLogs[i].Trade.Scale.Units);
+        var amt = 0;
+        if (weightUnit.equalBase(math.unit(1, gVisitorLogs[i].Trade.Scale.Units)))
+        {
+            // console.log(weightUnit.to(gVisitorLogs[i].Trade.Scale.Units).toNumeric())
+            amt = weightUnit.to(gVisitorLogs[i].Trade.Scale.Units).toNumeric() * gVisitorLogs[i].Trade.Scale.Price;
+            amt = amt.toFixed(2);
+            // console.log(amt);
+        }
+        else
+        {
+            alert("Units mismatch between entered units \'"+ gVisitorLogs[i].Trade.Units + "\' and units in database \'" + gVisitorLogs[i].Trade.Scale.Price + "\'");
+        }
+        row.insertCell(9).innerHTML = gVisitorLogs[i].Trade.Scale.Currency + " " + amt.toString();
 
         if (gVisitorLogs[i].VehicleNo in gVisitorsToday)
             gVisitorsToday[gVisitorLogs[i].VehicleNo] += 1;
@@ -225,6 +252,12 @@ function updateVisitorTable(visitorlogs){
         }
     }
     document.getElementById("idTotalVistorsCnt").innerHTML = Object.keys(gVisitorsToday).length.toString();
+}
+
+function updateWeighUnits(obj){
+    var item = getItemByName(obj.value);
+    document.getElementById('idEntryWeightInUnits').innerHTML = item.Units;
+    document.getElementById('idExitWeightInUnits').innerHTML = item.Units;
 }
 
 // Sends GET request to server to get all items list
@@ -338,12 +371,11 @@ function reqAddVisitor(){
         async: false,
         contentType: 'application/json',
         datatype: "json",
-        url: '/add',
+        url: '/addvisitor',
         success: function(returns){
             if(returns){
                 document.getElementById("idAddForm").reset();
-                document.getElementById("idAddVisitor").disabled = true;
-                updateVisitorsList(JSON.parse(returns))
+                updateVisitorsList(JSON.parse(returns));
             }
             else{
                 console.log(returns);
@@ -353,6 +385,37 @@ function reqAddVisitor(){
         error: function(errorMsg){
             console.log(errorMsg);
             alert("Adding visitor failed\nError: " + errorMsg.responseText);
+        }
+    });
+}
+
+function reqAddItem(){
+    let data = {};
+    data.Name = document.getElementById("idItemNameNew").value;
+    data.Currency = document.getElementById("idItemCurrencyNew").value;
+    data.Price = document.getElementById("idItemPriceNew").value;
+    data.Units = document.getElementById("idItemUnitsNew").value;
+    $.ajax({
+        type: 'POST',
+        data: JSON.stringify(data),
+        cache: false,
+        async: false,
+        contentType: 'application/json',
+        datatype: "json",
+        url: '/additem',
+        success: function(returns){
+            if(returns){
+                document.getElementById("idAddItemForm").reset();
+                updateItemsList(JSON.parse(returns));
+            }
+            else{
+                console.log(returns);
+                alert("Adding item failed\nError: Unknown");
+            }
+        },
+        error: function(errorMsg){
+            console.log(errorMsg);
+            alert("Adding item failed\nError: " + errorMsg.responseText);
         }
     });
 }
@@ -535,10 +598,10 @@ function createCheckinInvoice(data) {
         // auto print not working.. workaround below
         window.open(doc.output('bloburl'), '_blank')
         // doc.save("sss.pdf");
-        document.getElementById('idInvoiceFrame').src = doc.output('bloburl');
+        // document.getElementById('idInvoiceFrame').src = doc.output('bloburl');
     }
     catch (e) {
-        alert("Creating checkout invoice failed.\nException: " + e);
+        alert("Creating checkin invoice failed.\nException: " + e);
     }
 }
 
@@ -600,7 +663,7 @@ function createCheckoutInvoice(data) {
         // auto print not working.. workaround below
         window.open(doc.output('bloburl'), '_blank')
         // doc.save("sss.pdf");
-        document.getElementById('idInvoiceFrame').src = doc.output('bloburl');
+        // document.getElementById('idInvoiceFrame').src = doc.output('bloburl');
     }
     catch (e) {
         alert("Creating checkout invoice failed.\nException: " + e);

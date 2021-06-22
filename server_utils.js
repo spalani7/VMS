@@ -78,7 +78,7 @@ module.exports.SetItemsList = async function(items, currency){
             Units:val.Units,
             Active:true
         };
-        var docs = await dbItem.find(item, null);
+        var docs = await dbItem.find({Name:val.Name}, null);
         if (docs.length == 0)
         {
             // validate schema
@@ -91,7 +91,8 @@ module.exports.SetItemsList = async function(items, currency){
                 if(error) console.log("Error adding item.\nError: " + error);
             });
         }
-
+        else
+            console.log("Item " + val.Name + " already present in database, skipped adding.");
     });
 }
 
@@ -205,7 +206,7 @@ module.exports.Checkin = async function(req, res){
     // Save new visitor to database
     try
     {
-        await newVisitorLog.save()
+        await newVisitorLog.save();
         // const docs = await dbVistorLog.find(dbFilter, null, {sort: {TimeIn: -1}});
         await res.status(200).send("OK");
     }
