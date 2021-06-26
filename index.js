@@ -22,8 +22,6 @@ app.listen(config.ServicePort, function() {
     console.log('listening on ' + config.ServicePort)
   })
 
-utils.SetItemsList(config['Items'], config.CurrencyCode);
-
 process.on('unhandledRejection', (reason, promise) => {
     console.log("Reason: ",reason,"promise: ",promise);
  })
@@ -38,35 +36,33 @@ app.post('/addvisitor', async (req, res) => {
 })
 
 app.post('/additem', async (req, res) => {
-    await utils.SetItemsList(req.body, req.body.currency);
+    await utils.SetItemList(req, res);
 })
-    
+
 app.post('/checkin', async (req, res) => {
     await utils.Checkin(req, res);
 })
-    
+
 app.post('/checkout', async (req, res) => {
-    const [status, err] = await utils.Checkout(req, res);
-    res.status(status).send(err);
+    await utils.Checkout(req, res);
 })
 
 app.post('/searchvisitor', async (req, res) => {
-    const [status, data] = await utils.SearchVisitors(req, res);
-    res.status(status).send(data);
+    await utils.SearchVisitors(req, res);
 })
 
 app.get('/visitors', async (req, res) => {
-    const [status, data] = await utils.GetVisitors(req, res);
-    res.status(status).send(data);
+    await utils.GetVisitors(req, res);
 })
 
 app.get('/visitorlogs', async (req, res) => {
-    const [status, data] = await utils.GetVisitorLogs(req, res);
-    res.status(status).send(data);
+    await utils.GetVisitorLogs(req, res);
 })
 
 app.get('/items', async (req, res) => {
-    const [status, err] = await utils.GetItemsList(req, res);
-    res.status(status).send(err);
+    await utils.GetItemsList(req, res);
 })
-    
+
+// app.get('/visitorinfo', async (req, res) => {
+//     await utils.GetVisitorInfo(req, res);
+// })

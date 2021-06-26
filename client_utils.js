@@ -22,13 +22,33 @@ function setSelectedValue(selectObj, valueToSet) {
     }
 }
 
+function calcPrice(entryweight, exitweight, item)
+{
+    var weightDiff = (exitweight < entryweight) ? 0 : (exitweight - entryweight);
+    // console.log(weightDiff)
+    
+    var weightUnit = math.unit(weightDiff, item.Units);
+    var amt = -1;
+    if (weightUnit.equalBase(math.unit(1, item.Units)))
+    {
+        amt = weightUnit.to(item.Units).toNumeric() * item.Price;
+        amt = parseFloat(amt.toFixed(2));
+        // console.log(amt);
+    }
+    else
+    {
+        alert("Units mismatch between entered units \'"+ item.Units + "\' and units in database \'" + item.Price + "\'");
+    }
+    return amt;
+}
+
 function getVisitorPassId(visitorObj)
 {
     let visitorLogIdx = -1;
     // assuming gVisitorLogs is already sorted in descending order (starting index contains most recent ones) 
     for(var i=0; i<gVisitorLogs.length; i++)
     {
-        if(gVisitorLogs[i].Name == visitorObj.Name || gVisitorLogs[i].VehicleNo == visitorObj.VehicleNo){
+        if(gVisitorLogs[i].Visitor.Name == visitorObj.Name || gVisitorLogs[i].Visitor.VehicleNo == visitorObj.VehicleNo){
             visitorLogIdx = i;
             break;
         }
@@ -53,10 +73,10 @@ function getItemByName(itemName)
 function getVisitorStatus(visitorObj)
 {
     let visitorLogIdx = -1;
-    // assuming gVisitorLogs is already sorted in descending order (starting index contains most recent ones) 
+    // assuming gVisitorLogs is already sorted in descending order (starting index contains most recent ones)
     for(var i=0; i<gVisitorLogs.length; i++)
     {
-        if(gVisitorLogs[i].Name == visitorObj.Name || gVisitorLogs[i].VehicleNo == visitorObj.VehicleNo){
+        if(gVisitorLogs[i].Visitor.Name == visitorObj.Name || gVisitorLogs[i].Visitor.VehicleNo == visitorObj.VehicleNo){
             visitorLogIdx = i;
             break;
         }
@@ -66,7 +86,6 @@ function getVisitorStatus(visitorObj)
 
 // Populates checkin/checkout forms based on Name or vehicle No
 function updateVisitorInfo(obj){
-    let dashboard = document.getElementById("idVistorTable");
     let checkIn = (obj.id == "idVisitorsIn" || obj.id == "idVehiclesIn") ? true : false;
     let name = (obj.id == "idVisitorsIn" || obj.id == "idVisitors") ? obj.value : undefined;
     let vehicleNo = (obj.id == "idVehiclesIn" || obj.id == "idVehicles") ? obj.value : undefined;
@@ -75,7 +94,7 @@ function updateVisitorInfo(obj){
 
     for(var i=0; i<gVisitorLogs.length; i++)
     {
-        if(gVisitorLogs[i].Name == name || gVisitorLogs[i].VehicleNo == vehicleNo){
+        if(gVisitorLogs[i].Visitor.Name == name || gVisitorLogs[i].Visitor.VehicleNo == vehicleNo){
             visitorLogIdx = i;
             break;
         }
@@ -97,6 +116,7 @@ function updateVisitorInfo(obj){
         {
             document.getElementById("idVisitorsIn").value = gVisitors[visitorIdx].Name;
             document.getElementById("idVehiclesIn").value = gVisitors[visitorIdx].VehicleNo;
+            document.getElementById("idCompanyIn").value = gVisitors[visitorIdx].Company;
             document.getElementById("idPhoneIn").value = gVisitors[visitorIdx].Phone;
         }
     }
@@ -106,13 +126,17 @@ function updateVisitorInfo(obj){
             alert("User not checked-in or already checked out");
         else
         {
-            document.getElementById("idVisitors").value = gVisitorLogs[visitorLogIdx].Name;
-            document.getElementById("idVehicles").value = gVisitorLogs[visitorLogIdx].VehicleNo;
-            document.getElementById("idPhone").value = gVisitorLogs[visitorLogIdx].Phone;
-            document.getElementById("idEntryWeight").value = gVisitorLogs[visitorLogIdx].Trade['EntryWeight'];
-            document.getElementById("idEntryWeightUnits").innerHTML = gVisitorLogs[visitorLogIdx].Trade['Units'];
-            document.getElementById("idExitWeightUnits").innerHTML = gVisitorLogs[visitorLogIdx].Trade['Units'];
-            document.getElementById("idItemReq").value = gVisitorLogs[visitorLogIdx].Trade['ItemName'];
+            document.getElementById("idVisitors").value = gVisitorLogs[visitorLogIdx].Visitor.Name;
+            document.getElementById("idVehicles").value = gVisitorLogs[visitorLogIdx].Visitor.VehicleNo;
+            document.getElementById("idCompany").value = gVisitorLogs[visitorLogIdx].Visitor.Company;
+            document.getElementById("idPhone").value = gVisitorLogs[visitorLogIdx].Visitor.Phone;
+            document.getElementById("idEntryWeight").value = gVisitorLogs[visitorLogIdx].EntryWeight;
+            document.getElementById("idEntryWeightUnits").innerHTML = gVisitorLogs[visitorLogIdx].Item.Units;
+            document.getElementById("idExitWeightUnits").innerHTML = gVisitorLogs[visitorLogIdx].Item.Units;
+            document.getElementById("idCurrencyPaid").innerHTML = gVisitorLogs[visitorLogIdx].Item.Currency;
+            document.getElementById("idCurrencyCredit").innerHTML = gVisitorLogs[visitorLogIdx].Item.Currency;
+            document.getElementById("idCreditValue").value = 0;
+            document.getElementById("idItemReq").value = gVisitorLogs[visitorLogIdx].Item.Name;
         }
     }
 }
@@ -187,6 +211,23 @@ function updateVisitorsList(visitors){
     });
 }
 
+function updatePrice(items)
+{
+    var entryWeight = parseFloat(document.getElementById("idEntryWeight").value);
+    var exitWeight = parseFloat(document.getElementById("idExitWeight").value);
+    if(exitWeight < entryWeight) 
+    {
+        document.getElementById("idTotalPrice").innerHTML = "WRONG EXIT WEIGHT";
+        return;
+    }
+    var item = getItemByName(document.getElementById("idItemReq").value);
+    var totalPrice = calcPrice(entryWeight, exitWeight, item);
+    document.getElementById("idTotalPrice").innerHTML = totalPrice.toString();
+    var paidValue = parseFloat(document.getElementById("idPaidValue").value);
+    if (paidValue != "NaN")
+        document.getElementById("idCreditValue").value = (totalPrice - paidValue).toFixed(2);
+}
+
 // Updates vistor table and checkout dropdown lists based on GET request data (/refresh) from server
 function updateVisitorTable(visitorlogs){
 
@@ -207,37 +248,21 @@ function updateVisitorTable(visitorlogs){
     for(var i=0; i<gVisitorLogs.length; i++){
         let row = dashboard.insertRow(i+1);
         row.insertCell(0).innerHTML = gVisitorLogs[i].PassId;
-        row.insertCell(1).innerHTML = gVisitorLogs[i].Name;
-        row.insertCell(2).innerHTML = gVisitorLogs[i].VehicleNo;
-        row.insertCell(3).innerHTML = gVisitorLogs[i].Phone;
+        row.insertCell(1).innerHTML = gVisitorLogs[i].Visitor.Name;
+        row.insertCell(2).innerHTML = gVisitorLogs[i].Visitor.VehicleNo;
+        row.insertCell(3).innerHTML = gVisitorLogs[i].Visitor.Phone;
         row.insertCell(4).innerHTML = moment(gVisitorLogs[i].TimeIn).format("DD/MM/YYYY HH:mm:ss");
         row.insertCell(5).innerHTML = moment(gVisitorLogs[i].TimeOut).format("DD/MM/YYYY HH:mm:ss");
-        row.insertCell(6).innerHTML = gVisitorLogs[i].Trade['ItemName'].toString();
-        row.insertCell(7).innerHTML = gVisitorLogs[i].Trade['EntryWeight'].toString() + gVisitorLogs[i].Trade.Units;
-        row.insertCell(8).innerHTML = gVisitorLogs[i].Trade['ExitWeight'].toString() + gVisitorLogs[i].Trade.Units;
-        var weightDiff = (gVisitorLogs[i].Trade['ExitWeight'] < gVisitorLogs[i].Trade['EntryWeight']) ? 0 : (gVisitorLogs[i].Trade['ExitWeight'] - gVisitorLogs[i].Trade['EntryWeight']);
-        // console.log(weightDiff)
-        
-        var weightUnit = math.unit(weightDiff, gVisitorLogs[i].Trade.Units);
-        // console.log(gVisitorLogs[i].Trade.Units, gVisitorLogs[i].Trade.Scale.Units);
-        var amt = 0;
-        if (weightUnit.equalBase(math.unit(1, gVisitorLogs[i].Trade.Scale.Units)))
-        {
-            // console.log(weightUnit.to(gVisitorLogs[i].Trade.Scale.Units).toNumeric())
-            amt = weightUnit.to(gVisitorLogs[i].Trade.Scale.Units).toNumeric() * gVisitorLogs[i].Trade.Scale.Price;
-            amt = amt.toFixed(2);
-            // console.log(amt);
-        }
-        else
-        {
-            alert("Units mismatch between entered units \'"+ gVisitorLogs[i].Trade.Units + "\' and units in database \'" + gVisitorLogs[i].Trade.Scale.Price + "\'");
-        }
-        row.insertCell(9).innerHTML = gVisitorLogs[i].Trade.Scale.Currency + " " + amt.toString();
+        row.insertCell(6).innerHTML = gVisitorLogs[i].Item.Name.toString();
+        row.insertCell(7).innerHTML = gVisitorLogs[i].EntryWeight.toString() + " " + gVisitorLogs[i].Item.Units;
+        row.insertCell(8).innerHTML = gVisitorLogs[i].ExitWeight.toString() + " " + gVisitorLogs[i].Item.Units;
+        var amt = calcPrice(gVisitorLogs[i].EntryWeight, gVisitorLogs[i].ExitWeight, gVisitorLogs[i].Item);
+        row.insertCell(9).innerHTML = gVisitorLogs[i].Item.Currency + " " + amt.toString();
 
-        if (gVisitorLogs[i].VehicleNo in gVisitorsToday)
-            gVisitorsToday[gVisitorLogs[i].VehicleNo] += 1;
+        if (gVisitorLogs[i].Visitor.VehicleNo in gVisitorsToday)
+            gVisitorsToday[gVisitorLogs[i].Visitor.VehicleNo] += 1;
         else
-            gVisitorsToday[gVisitorLogs[i].VehicleNo] = 1;
+            gVisitorsToday[gVisitorLogs[i].Visitor.VehicleNo] = 1;
 
         let checkedin = row.insertCell(10);
         if(gVisitorLogs[i].CheckedIn)
@@ -258,6 +283,8 @@ function updateWeighUnits(obj){
     var item = getItemByName(obj.value);
     document.getElementById('idEntryWeightInUnits').innerHTML = item.Units;
     document.getElementById('idExitWeightInUnits').innerHTML = item.Units;
+    document.getElementById("idCurrencyCreditIn").innerHTML = item.Currency;
+
 }
 
 // Sends GET request to server to get all items list
@@ -359,35 +386,66 @@ function reqVisitorLogs(){
 //     });
 // }
 
+// Sends POST request to server
+$('#idAddForm').validator().on('submit', function (e) {
+
+    if (e.isDefaultPrevented()) {
+      // handle the invalid form...
+    } else {
+      // everything looks good!
+
+      // uncomment if you like to stop reloading page after successfull ajax request
+      e.preventDefault();
+      reqAddVisitor();
+    }
+  }
+);
+
 function reqAddVisitor(){
     let data = {};
     data.Name = document.getElementById("idNameNew").value;
     data.VehicleNo = document.getElementById("idVehicleNew").value;
+    data.Company = document.getElementById("idCompanyNew").value;
     data.Phone = document.getElementById("idPhoneNew").value;
     $.ajax({
         type: 'POST',
         data: JSON.stringify(data),
         cache: false,
-        async: false,
+        async: true,
         contentType: 'application/json',
         datatype: "json",
         url: '/addvisitor',
         success: function(returns){
             if(returns){
                 document.getElementById("idAddForm").reset();
-                updateVisitorsList(JSON.parse(returns));
+                document.getElementById("idAddVisitorStatus").innerHTML = "Visitor added successfully!";
+                // updateVisitorsList(JSON.parse(returns));
             }
             else{
                 console.log(returns);
-                alert("Adding visitor failed\nError: Unknown");
+                document.getElementById("idAddVisitorStatus").innerHTML = "Error adding visitor.\nError: Unknown";
             }
         },
         error: function(errorMsg){
             console.log(errorMsg);
-            alert("Adding visitor failed\nError: " + errorMsg.responseText);
+            document.getElementById("idAddVisitorStatus").innerHTML = "Error adding visitor.\nError: " + errorMsg.responseText;
         }
     });
 }
+
+// Sends POST request to server
+$('#idAddItemForm').validator().on('submit', function (e) {
+    if (e.isDefaultPrevented()) {
+      // handle the invalid form...
+    } else {
+      // everything looks good!
+
+      // uncomment if you like to stop reloading page after successfull ajax request
+      e.preventDefault();
+      reqAddItem();
+    }
+  }
+);
 
 function reqAddItem(){
     let data = {};
@@ -399,23 +457,24 @@ function reqAddItem(){
         type: 'POST',
         data: JSON.stringify(data),
         cache: false,
-        async: false,
+        async: true,
         contentType: 'application/json',
         datatype: "json",
         url: '/additem',
         success: function(returns){
             if(returns){
                 document.getElementById("idAddItemForm").reset();
-                updateItemsList(JSON.parse(returns));
+                document.getElementById("idAdditemStatus").innerHTML = "Item added successfully!";
+                // updateItemsList(JSON.parse(returns));
             }
             else{
                 console.log(returns);
-                alert("Adding item failed\nError: Unknown");
+                document.getElementById("idAdditemStatus").innerHTML = "Error adding item.\nError: Unknown";
             }
         },
         error: function(errorMsg){
             console.log(errorMsg);
-            alert("Adding item failed\nError: " + errorMsg.responseText);
+            document.getElementById("idAdditemStatus").innerHTML = "Error adding item.\nError: " + errorMsg.responseText;
         }
     });
 }
@@ -436,19 +495,18 @@ $('#idCheckinForm').validator().on('submit', function (e) {
 function reqCheckin(){
     let data = {};
     data.PassId = gVisitorLogs.length + 1;
-    data.Name = document.getElementById("idVisitorsIn").value;
-    data.VehicleNo = document.getElementById("idVehiclesIn").value;
-    data.Phone = document.getElementById("idPhoneIn").value;
-    var entryWeight = parseFloat(document.getElementById("idEntryWeightIn").value).toFixed(3);
-    var item = getItemByName(document.getElementById("idItemReqIn").value);
-    data.Trade = {
-        'ItemName': item.Name, 
-        'Units': item.Units, 
-        'EntryWeight': entryWeight,
-        'ExitWeight': 0,
-        'Scale': {'Price': item.Price, 'Currency': item.Currency, 'Units': item.Units}, 
-        'Payments': []
-    };
+    data.Visitor = {}
+    data.Visitor.Name = document.getElementById("idVisitorsIn").value;
+    data.Visitor.VehicleNo = document.getElementById("idVehiclesIn").value;
+    data.Visitor.Company = document.getElementById("idCompanyIn").value;
+    data.Visitor.Phone = document.getElementById("idPhoneIn").value;
+    data.Item = getItemByName(document.getElementById("idItemReqIn").value);
+    data.EntryWeight = parseFloat(parseFloat(document.getElementById("idEntryWeightIn").value).toFixed(3)),
+    data.ExitWeight = 0,
+    data.Price = 0;
+    data.Paid = 0;
+    data.Credit = 0;
+
     $.ajax({
         type: 'POST',
         data: JSON.stringify(data),
@@ -493,27 +551,31 @@ $('#idCheckoutForm').validator().on('submit', function (e) {
 function reqCheckout(){
 
     let data = {};
-    data.Name = document.getElementById("idVisitors").value;
-    data.VehicleNo = document.getElementById("idVehicles").value;
-    data.Phone = document.getElementById("idPhone").value;
-    var entryWeight = parseFloat(document.getElementById("idEntryWeight").value).toFixed(3);
-    var exitWeight = parseFloat(document.getElementById("idExitWeight").value).toFixed(3);
+    data.Visitor = {}
+    data.Visitor.Name = document.getElementById("idVisitors").value;
+    data.Visitor.VehicleNo = document.getElementById("idVehicles").value;
+    data.Visitor.Company = document.getElementById("idCompany").value;
+    data.Visitor.Phone = document.getElementById("idPhone").value;
+    var entryWeight = parseFloat(parseFloat(document.getElementById("idEntryWeight").value).toFixed(3));
+    var exitWeight = parseFloat(parseFloat(document.getElementById("idExitWeight").value).toFixed(3));
     if(exitWeight < entryWeight) 
     {
         alert("Checkout failed\nError: Exit weight should be greater than Entry weight");
         return;
     }
+
+    var paidValue = parseFloat(parseFloat(document.getElementById("idPaidValue").value).toFixed(2));
     var item = getItemByName(document.getElementById("idItemReq").value);
-    data.Trade = {
-        'ItemName': item.Name, 
-        'Units': item.Units, 
-        'EntryWeight': entryWeight,
-        'ExitWeight': exitWeight,
-        'Scale': {'Price': item.Price, 'Currency': item.Currency, 'Units': item.Units}, 
-        'Payments': [{'Amount': (exitWeight-entryWeight) * item.Price, 'PaymentType': 'Cash'}]
-    };
+    var price = calcPrice(entryWeight, exitWeight, item);
+    data.Item = item;
+    data.EntryWeight = entryWeight,
+    data.ExitWeight = exitWeight,
+    data.Price = price;
+    data.Paid = paidValue;
+    data.Credit = price - paidValue;
+
     // finds pass ID from the log
-    data.PassId = getVisitorPassId(data);
+    data.PassId = getVisitorPassId(data.Visitor);
     
     $.ajax({
         type: 'POST',
@@ -578,15 +640,15 @@ function createCheckinInvoice(data) {
         doc.setFontSize(10);
         doc.text("No: " + data.PassId, 20, 30);
         doc.text("Date: " + moment(Date.now()).format("DD/MM/YYYY HH:mm:ss"), 80, 30);
-        doc.text("Name: " + data.Name, 20, 35);
-        doc.text("Vehicle No: " + data.VehicleNo, 80, 35);
-        doc.text("Entry Weight: " + data.Trade.EntryWeight + " " + data.Trade.Units, 20, 40);
-        doc.text("Exit Weight: -" + " " + data.Trade.Units, 80, 40);
+        doc.text("Name: " + data.Visitor.Name, 20, 35);
+        doc.text("Vehicle No: " + data.Visitor.VehicleNo, 80, 35);
+        doc.text("Entry Weight: " + data.EntryWeight + " " + data.Item.Units, 20, 40);
+        doc.text("Exit Weight: -" + " " + data.Item.Units, 80, 40);
         
         doc.text("Item(s)", 20, 50);
         doc.text("Qty", 90, 50);
         doc.text("Amount", 120, 50);
-        doc.text("" + data.Trade.ItemName, 20, 60);
+        doc.text("" + data.Item.Name, 20, 60);
         doc.text("-", 90, 60);
         doc.text("-", 120, 60);
 
@@ -641,23 +703,23 @@ function createCheckoutInvoice(data) {
         doc.setFontSize(10);
         doc.text("No: " + data.PassId, 20, 30);
         doc.text("Date: " + moment(Date.now()).format("DD/MM/YYYY HH:mm:ss"), 80, 30);
-        doc.text("Name: " + data.Name, 20, 35);
-        doc.text("Vehicle No: " + data.VehicleNo, 80, 35);
-        doc.text("Entry Weight: " + data.Trade.EntryWeight + " " + data.Trade.Units, 20, 40);
-        doc.text("Exit Weight: " + data.Trade.ExitWeight + " " + data.Trade.Units, 80, 40);
+        doc.text("Name: " + data.Visitor.Name, 20, 35);
+        doc.text("Vehicle No: " + data.Visitor.VehicleNo, 80, 35);
+        doc.text("Entry Weight: " + data.EntryWeight + " " + data.Item.Units, 20, 40);
+        doc.text("Exit Weight: " + data.ExitWeight + " " + data.Item.Units, 80, 40);
         
         doc.text("Item(s)", 20, 50);
         doc.text("Qty", 90, 50);
         doc.text("Amount", 120, 50);
-        doc.text("" + data.Trade.ItemName, 20, 60);
-        var qty = data.Trade.ExitWeight - data.Trade.EntryWeight;
-        var amt = qty * data.Trade.Scale.Price;
-        doc.text("" + qty + " " + data.Trade.Units, 90, 60);
-        doc.text(data.Trade.Scale.Currency + " " + amt, 120, 60);
+        doc.text("" + data.Item.Name, 20, 60);
+        var qty = data.ExitWeight - data.EntryWeight;
+        var amt = qty * data.Item.Price;
+        doc.text("" + qty + " " + data.Item.Units, 90, 60);
+        doc.text(data.Item.Currency + " " + amt, 120, 60);
 
         doc.text("Total", 30, 93);
-        doc.text("" + qty + " " + data.Trade.Units, 90, 93);
-        doc.text(data.Trade.Scale.Currency + " " + amt, 120, 93);
+        doc.text("" + qty + " " + data.Item.Units, 90, 93);
+        doc.text(data.Item.Currency + " " + amt, 120, 93);
 
         // doc.autoPrint();
         // auto print not working.. workaround below

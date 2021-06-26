@@ -3,42 +3,14 @@ const mongoose = require('./dbconnect');
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
 var VisitorSchema = new mongoose.Schema({
-    Date:{ type: Date, default: Date.now() },
     Name: { type: String, required: true },
     VehicleNo:{ type: String, required: true },
-    Phone:{ type: Number, required: true },
+    Company:{ type: String, required: true },
+    Phone:{ type: String, required: true },
     Active:{ type: Boolean, required: true}
 });
 
-var VisitorLogSchema = new mongoose.Schema({
-    PassId:{ type: Number, required: true },
-    Name: { type: String, required: true },
-    VehicleNo:{ type: String, required: true },
-    Phone:{ type: Number, required: true },
-    TimeIn:{ type: Date, default: Date.now() },
-    TimeOut:{ type: Date, default: Date.now() },
-    Trade:{ 
-        ItemName: {type: String, required: true}, 
-        Units: {type: String, required: true}, 
-        EntryWeight: {type: Number, required: true},
-        ExitWeight: Number,
-        Scale: {
-            Price: Number, 
-            Currency: String,
-            Units: String,
-            type: Map,
-            required: true
-        }, 
-        Payments: [{ 
-            Amount : Number, 
-            PaymentType: { type: String, enum: ['Cash', 'Credit'] } 
-        }],
-    },
-    CheckedIn: { type: Boolean, required: true}
-});
-
 var ItemSchema = new mongoose.Schema({
-    Date:{ type: Date, default: Date.now() },
     Name:{ type: String, required: true },
     Price:{ type: Number, required: true },
     Currency:{ type: String, required: true },
@@ -46,66 +18,138 @@ var ItemSchema = new mongoose.Schema({
     Active:{ type: Boolean, required: true}
 });
 
+var VisitorLogSchema = new mongoose.Schema({
+    PassId:{ type: Number, required: true },
+    Visitor: { type: VisitorSchema, required: true },
+    Item: {type: ItemSchema, required: true}, 
+    TimeIn:{ type: Date, default: Date.now() },
+    TimeOut:{ type: Date, default: Date.now() },
+    EntryWeight: {type: Number, required: true},
+    ExitWeight: {type: Number, required: true},
+    Price : {type: Number, required: true},
+    Paid: {type: Number, required: true},
+    Credit:{type: Number, required: true},
+    CheckedIn: { type: Boolean, required: true}
+});
+
 // VisitorLogSchema.plugin(AutoIncrement, {id:'order_seq',inc_field: 'PassId'});
-const dbVistor = mongoose.model('visitors', VisitorSchema);
-const dbVistorLog = mongoose.model('visitors_log', VisitorLogSchema);
-const dbItem = mongoose.model('items', ItemSchema);
+const dbVistor = mongoose.model('Visitors', VisitorSchema);
+const dbItem = mongoose.model('Items', ItemSchema);
+const dbVistorLog = mongoose.model('VisitorLogs', VisitorLogSchema);
 
 module.exports.GetVisitorLogs = async function(req, res){
     // Retrieve only todays data for display on gui
     console.log("Getting all Visitors log..");
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const docs = await dbVistorLog.find({TimeIn: {$gte: today}}, null, {sort: {TimeIn: -1}});
-    return [200, JSON.stringify(docs)];
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    dbVistorLog.find({TimeIn: {$gte: today}}, null, {sort: {TimeIn: -1}}, async function(error, docs){
+        if(error)
+            await res.status(400).send(JSON.stringify(error));
+        if(docs)
+            await res.status(200).send(JSON.stringify(docs));
+    });
 }
 
 module.exports.GetItemsList = async function(req, res){
     // Retrieve only todays data for display on gui
     console.log("Getting all Items list..");
-    const docs = await dbItem.find({Active: true}, null, {sort: {Date: -1}});
-    return [200, JSON.stringify(docs)];
+    dbItem.find({Active: true}, null, {sort: {Date: -1}}, async function(error, docs){
+        if(error)
+            await res.status(400).send(JSON.stringify(error));
+        if(docs)
+            await res.status(200).send(JSON.stringify(docs));
+    });
 }
 
-module.exports.SetItemsList = async function(items, currency){
-    // Retrieve only todays data for display on gui
-    console.log("Setting all Items list..");
-    items.forEach(async function(val,idx){
-        var item = {
-            Name:val.Name,
-            Price:val.Price,
-            Currency:currency,
-            Units:val.Units,
-            Active:true
-        };
-        var docs = await dbItem.find({Name:val.Name}, null);
-        if (docs.length == 0)
-        {
-            // validate schema
-            var newItem = new dbItem(item);
-            let error = newItem.validateSync();
-            if(error) console.log("Error validating item.\nError: " + error);
+// module.exports.SetItemsList = async function(items, currency){
+//     // Retrieve only todays data for display on gui
+//     console.log("Setting all Items list..");
+//     items.forEach(async function(val,idx){
+//         var item = {
+//             Name:val.Name,
+//             Price:val.Price,
+//             Currency:currency,
+//             Units:val.Units,
+//             Active:true
+//         };
+//         var docs = await dbItem.find({Name:val.Name}, null);
+//         if (docs.length == 0)
+//         {
+//             // validate schema
+//             var newItem = new dbItem(item);
+//             let error = newItem.validateSync();
+//             if(error) {
+//                 var errText = "Error validating item.\nError: " + error;
+//                 console.log(errText);
+//             }
 
-            // Save new visitor to database
-            newItem.save(async function(error) {
-                if(error) console.log("Error adding item.\nError: " + error);
-            });
+//             // Save new visitor to database
+//             newItem.save(async function(error) {
+//                 if(error) {
+//                     var errText = "Error adding item.\nError: " + error;
+//                     console.log(errText);
+//                 }
+//             });
+//         }
+//         else
+//         {
+//             var errText = "Item " + val.Name + " already present in database, skipped adding.";
+//             console.log(errText);
+//         }
+//     });
+// }
+
+module.exports.SetItemList = async function(req, res){
+    var item = {
+        Name:req.body.Name,
+        Price:req.body.Price,
+        Currency:req.body.Currency,
+        Units:req.body.Units,
+        Active:true
+    };
+    var docs = await dbItem.find({Name:req.body.Name}).exec();
+    if (docs.length == 0)
+    {
+        // validate schema
+        var newItem = new dbItem(item);
+        let error = newItem.validateSync();
+        if(error) {
+            var errText = "Error validating item.\nError: " + error;
+            console.log(errText);
+            await res.status(400).send(JSON.stringify(errText));
+            return;
         }
-        else
-            console.log("Item " + val.Name + " already present in database, skipped adding.");
-    });
+
+        // Save new visitor to database
+        newItem.save()
+            .then(async (visitor) => {
+                await res.status(200).send("OK");
+            })
+            .catch(async (error) => {
+                //When there are errors We handle them here
+                await res.status(400).send(JSON.stringify(error));
+            });
+    }
+    else
+    {
+        var errText = "Item " + req.body.Name + " already present in database, skipped adding.";
+        console.log(errText);
+        await res.status(400).send(JSON.stringify(errText));
+    }
 }
 
 module.exports.GetVisitors = async function(req, res){
     // Retrieve only todays data for display on gui
     console.log("Getting all Visitors data..");
-    const docs = await dbVistor.find({Active: true}, null, {sort: {TimeIn: -1}});
-    // console.log(docs);
-    return [200, JSON.stringify(docs)];
+    dbVistor.find({Active: true}, null, null, async function(error, docs){
+        if(error)
+            await res.status(400).send(JSON.stringify(error));
+        if(docs)
+            await res.status(200).send(JSON.stringify(docs));
+    });
 }
 
 module.exports.SearchVisitors = async function(req, res){
-    // Retrieve only todays data for display on gui
     console.log("Searching Visitor..", JSON.stringify(req.body));
 
     for (var e in req.body) {
@@ -114,86 +158,136 @@ module.exports.SearchVisitors = async function(req, res){
         }
     }
     req.body['Active'] = true;
-    const docs = await dbVistor.find(req.body, null, {sort: {TimeIn: -1}});
-    // console.log(docs);
-    return [200, JSON.stringify(docs)];
+    dbVistor.find(req.body, null, null, async function(error, docs){
+        if(error)
+            await res.status(400).send(JSON.stringify(error));
+        if(docs)
+            await res.status(200).send(JSON.stringify(docs));
+    });
+}
+
+module.exports.GetVisitorInfo = async function(req, res){
+    var info = {
+        "TotalCredit": 0, // total credit
+        "MonthWise": 0, // month, total visits, sum price, sum credit
+        "ItemWise": 0, // items, total weight, sum price, sum credit
+    }
+}
+
+module.exports.GetVisitInfo = async function(req, res){
+    var info = {
+        "VisitorWise": 0, // visitors, total price, credit
+        "ItemWise": 0, // visitors, items, total weight, total price
+    }
+}
+
+module.exports.checkVisitorInDb = async function(visitor){
+    // check if visitor already available
+    const docs = await dbVistor.find(visitor).exec();
+    if (docs.length > 1)
+        return [-1, `Found ${docs.length-1} duplicate visitors in database`];
+
+    if (docs.length == 1 && docs[0].Active == true)
+        return [-2, `Found active visitor in database`];
+    
+    return [0, 'OK'];
 }
 
 module.exports.AddVisitor = async function(req, res){
 
     // req body is parsed as json by default (set in index.js)
-
+    console.log(req.body)
     // Populate new visitor data
     var visitor = {
-        Date:Date.now(),
         Name:req.body.Name, 
         VehicleNo:req.body.VehicleNo, 
+        Company:req.body.Company, 
         Phone:req.body.Phone, 
-        Active: true
     };
     console.log("Adding: " + visitor);
 
-    // check if visitor already available
-    const docs = await dbVistorLog.find(visitor, null);
-    if (docs.length > 0)
+    const [err, errmsg] = await this.checkVisitorInDb(visitor);
+    if(err < 0)
     {
-        await res.status(400).send('User already in database');
+        await res.status(400).send(errmsg);
         return;
     }
 
-    // validate schema
+    // Create visitor
+    console.log("creating new visitor..")
+    visitor['Active'] = true;
     var newVisitor = new dbVistor(visitor);
+
+    // validate visitor
+    console.log("Validating visitor..")
     let error = newVisitor.validateSync();
     if(error) {
         await res.status(400).send(error['message']);
         return;
     }
 
-    // Save new visitor to database
-    try {
-        await newVisitor.save();
-        // const docs = await dbVistor.find({}, null, {sort: {TimeIn: -1}});
-        await res.status(200).send("OK");
-    }
-    catch(e)
-    {
-        await res.status(400).send(JSON.stringify(e));
-    }
+    // Saving visitor
+    await newVisitor.save()
+        .then(async (visitor) => {
+            await res.status(200).send("OK");
+        })
+        .catch(async (error) => {
+            //When there are errors We handle them here
+            await res.status(400).send(JSON.stringify(error));
+        });
+    // const docs = await dbVistor.find({}, null, {sort: {TimeIn: -1}});
 }
 
 module.exports.Checkin = async function(req, res){
 
     // req body is parsed as json by default (set in index.js)
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const dbFilter = {Name:req.body.Name, VehicleNo:req.body.VehicleNo, Phone:req.body.Phone, TimeIn:{$gte: today}, CheckedIn:true}
-    var docs = await dbVistorLog.find(dbFilter, null, {sort: {TimeIn: -1}});
-    if (docs.length > 0)
+    const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+
+    var visitorInfo = {
+        Name: req.body.Visitor.Name,
+        VehicleNo: req.body.Visitor.VehicleNo,
+        Company: req.body.Visitor.Company,
+        Phone: req.body.Visitor.Phone
+    }
+
+    // check if valid visitor 
+    const [err, errmsg] = await this.checkVisitorInDb(visitorInfo);
+    if(err < 0)
     {
-        // console.log("Visitor already checked in today\n" + docs);
-        await res.status(400).send('User already checked in today');
+        await res.status(400).send(errmsg);
         return;
     }
 
-    // var tradeList = [];
-    // req.body.Trade.forEach(function(val, idx){
-    //     tradeList.append({
-    //         ItemName: val['ItemName'],
-    //         EntryWeight: val['EntryWeight'],
-    //         Units: val['Units'],
-    //         Scale: val['Scale']
-    //     });
-    // });
+    const dbFilter = {
+        Visitor: visitorInfo,
+        TimeIn: {$gte: yesterday}, 
+        CheckedIn: true
+    }
+    
+    var docs = await dbVistorLog.find(dbFilter, null, {sort: {TimeIn: -1}}).exec();
+    if (docs.length > 0)
+    {
+        // console.log("Visitor already checked in today\n" + docs);
+        await res.status(400).send('Visitor already checked in today');
+        return;
+    }
+
     // Populate new visitor data
+    visitorInfo['Active'] = true;
+
     var newVisitorLog = new dbVistorLog({
         PassId: req.body.PassId, // incremented automatically on save
-        Name:req.body.Name, 
-        VehicleNo:req.body.VehicleNo, 
-        Phone:req.body.Phone, 
-        TimeIn:Date.now(),
-        TimeOut:null,
-        Trade: req.body.Trade,
-        CheckedIn:true, 
+        Visitor: visitorInfo,
+        TimeIn: Date.now(),
+        TimeOut: null,
+        Item: req.body.Item,
+        EntryWeight: req.body.EntryWeight,
+        ExitWeight: req.body.ExitWeight,
+        Price: req.body.Price,
+        Paid: req.body.Paid,
+        Credit: req.body.Credit,
+        CheckedIn: true, 
     });
 
     let error = newVisitorLog.validateSync();
@@ -204,17 +298,15 @@ module.exports.Checkin = async function(req, res){
     console.log("Checking in: " + JSON.stringify(req.body));
 
     // Save new visitor to database
-    try
-    {
-        await newVisitorLog.save();
-        // const docs = await dbVistorLog.find(dbFilter, null, {sort: {TimeIn: -1}});
-        await res.status(200).send("OK");
-    }
-    catch(e)
-    {
-        console.log(e);
-        await res.status(400).send(JSON.stringify(e));
-    }
+    await newVisitorLog.save()
+        .then(async (visitorLog) => {
+            await res.status(200).send("OK");
+        })
+        .catch(async (error) => {
+            //When there are errors We handle them here
+            await res.status(400).send(JSON.stringify(error));
+        });
+    // const docs = await dbVistorLog.find(dbFilter, null, {sort: {TimeIn: -1}});
 }
 
 module.exports.Checkout = async function(req, res){
@@ -222,24 +314,17 @@ module.exports.Checkout = async function(req, res){
     // find and update only most recent visitor
     console.log("Checking out: " + JSON.stringify(req.body));
     
-    // var tradeUpdateList = [];
-    // req.body.Trade.forEach(function(val, idx){
-    //     tradeUpdateList.append({
-    //         ExitWeight: val['ExitWeight'],
-    //         Payments: val['Payments']
-    //     });
-    // });
-    doc = await dbVistorLog.findOneAndUpdate(
+    dbVistorLog.findOneAndUpdate(
         {
             PassId:req.body.PassId, 
-            Name:req.body.Name, 
-            VehicleNo:req.body.VehicleNo, 
-            Phone:req.body.Phone, 
             CheckedIn: true
         }, 
         {
             TimeOut: Date.now(), 
-            Trade: req.body.Trade,
+            ExitWeight: req.body.ExitWeight,
+            Price: req.body.Price,
+            Paid: req.body.Paid,
+            Credit: req.body.Credit,
             CheckedIn: false
         }, 
         {
@@ -248,23 +333,13 @@ module.exports.Checkout = async function(req, res){
             }, 
             new: true
         },
-        // function(error, doc) {
-        //     if(doc == null) return [400, "Visitor checkin not found1\n" + JSON.stringify(req.body)];
-        //     if (error) return [200, JSON.stringify(error)];
-        //     return [200, JSON.stringify(error)];
-        // }
+        async function(error, doc) {
+            if(error) {
+                await res.status(400).send(JSON.stringify(error));
+            }
+            if(doc){
+                await res.status(200).send("OK");
+            }
+        }
     );
-
-    if(doc == null) {
-        console.log("Visitor checkin not found\n");
-        return [400, "Visitor checkin not found\n" + JSON.stringify(req.body)];
-    }
-    else 
-    {
-        // send checkout log from database  as response
-        // const now = new Date();
-        // const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        // const docs = await dbVistorLog.find({Name:req.body.Name, VehicleNo:req.body.VehicleNo, Phone:req.body.Phone, TimeIn:{$gte: today}}, null, {sort: {TimeIn: -1}});
-        return [200, "OK"];
-    }
 }

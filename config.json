@@ -3,33 +3,5 @@
     "ServicePort": 8500,
     "allowedOrigins": "*",
     "CurrencyCode": "INR",
-    "CurrencyPrecision": 2,
-    "Items": [
-        {
-            "Name": "Sand1",
-            "Price": 25,
-            "Units": "kg"
-        },
-        {
-            "Name": "Sand2",
-            "Price": 40,
-            "Units": "kg"
-        },
-        {
-            "Name": "Sand3",
-            "Price": 60,
-            "Units": "kg"
-        },
-        {
-            "Name": "Sand4",
-            "Price": 60,
-            "Units": "cuft"
-        },
-        {
-            "Name": "Sand5",
-            "Price": 600,
-            "Units": "tonne"
-        }
-    ]
-
+    "CurrencyPrecision": 2
 }
