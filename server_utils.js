@@ -330,6 +330,8 @@ module.exports.ModifyVisitor = async function(req, res){
     if(req.body.ReqType == "add")
     {
         // Create visitor
+        visitor['Company'] = req.body.Company;
+        visitor['Phone'] = req.body.Phone;
         var newVisitor = new dbVistor(visitor);
 
         // validate visitor
