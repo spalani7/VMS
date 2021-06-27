@@ -3,5 +3,7 @@
     "ServicePort": 8500,
     "allowedOrigins": "*",
     "CurrencyCode": "INR",
-    "CurrencyPrecision": 2
+    "CurrencyPrecision": 2,
+    "Locale": "en_IN",
+    "TimeZone": "Asia/Kolkata"
 }
