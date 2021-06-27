@@ -114,9 +114,8 @@ module.exports.SetItemList = async function(req, res){
         var newItem = new dbItem(item);
         let error = newItem.validateSync();
         if(error) {
-            var errText = "Error validating item.\nError: " + error;
-            console.log(errText);
-            await res.status(400).send(JSON.stringify(errText));
+            console.log(error);
+            await res.status(400).send(JSON.stringify(error));
             return;
         }
 
@@ -183,14 +182,28 @@ module.exports.GetVisitInfo = async function(req, res){
 
 module.exports.checkVisitorInDb = async function(visitor){
     // check if visitor already available
+    var ret = [-1, 'Error in querying visitor from database'];
     const docs = await dbVistor.find(visitor).exec();
-    if (docs.length > 1)
-        return [-1, `Found ${docs.length-1} duplicate visitors in database`];
+    if (docs != null)
+    {
+        let numActiveVisitors = 0;
+        docs.forEach((val,idx)=>{
+            if (val.Active == true) numActiveVisitors++;
+        });
 
-    if (docs.length == 1 && docs[0].Active == true)
-        return [-2, `Found active visitor in database`];
-    
-    return [0, 'OK'];
+        if (numActiveVisitors > 1)
+        {
+            console.log(docs);
+            ret = [-2, `Found ${docs.length-1} duplicate visitors in database`];
+        }
+
+        if (numActiveVisitors == 0){
+            ret = [-3, `Visitors not found in database`];
+        }
+        else
+            ret = [0, 'OK'];
+    }
+    return ret;
 }
 
 module.exports.AddVisitor = async function(req, res){
@@ -214,12 +227,10 @@ module.exports.AddVisitor = async function(req, res){
     }
 
     // Create visitor
-    console.log("creating new visitor..")
     visitor['Active'] = true;
     var newVisitor = new dbVistor(visitor);
 
     // validate visitor
-    console.log("Validating visitor..")
     let error = newVisitor.validateSync();
     if(error) {
         await res.status(400).send(error['message']);

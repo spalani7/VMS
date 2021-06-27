@@ -712,14 +712,15 @@ function createCheckoutInvoice(data) {
         doc.text("Qty", 90, 50);
         doc.text("Amount", 120, 50);
         doc.text("" + data.Item.Name, 20, 60);
-        var qty = data.ExitWeight - data.EntryWeight;
-        var amt = qty * data.Item.Price;
-        doc.text("" + qty + " " + data.Item.Units, 90, 60);
-        doc.text(data.Item.Currency + " " + amt, 120, 60);
+        doc.text("" + (data.ExitWeight - data.EntryWeight) + " " + data.Item.Units, 90, 60);
+        doc.text(data.Item.Currency + " " + data.Price, 120, 60);
+
+        doc.text("CREDIT", 20, 70);
+        doc.text(data.Item.Currency + " " + data.Credit * -1, 120, 70);
 
         doc.text("Total", 30, 93);
-        doc.text("" + qty + " " + data.Item.Units, 90, 93);
-        doc.text(data.Item.Currency + " " + amt, 120, 93);
+        doc.text("" + (data.ExitWeight - data.EntryWeight) + " " + data.Item.Units, 90, 93);
+        doc.text(data.Item.Currency + " " + data.Paid, 120, 93);
 
         // doc.autoPrint();
         // auto print not working.. workaround below
