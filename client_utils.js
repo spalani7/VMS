@@ -280,7 +280,7 @@ function updateVisitorTable(visitorlogs){
                     column.formatterParams = {
                         inputFormat:"YYYY-MM-DDTHH:mm:ssZ",
                         outputFormat:"DD/MM/YYYY HH:mm:ss",
-                        invalidPlaceholder:"(invalid date)",
+                        invalidPlaceholder:" - ",
                     }
                 }
                 if (column.field == "CheckedIn") {
