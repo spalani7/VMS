@@ -382,8 +382,8 @@ module.exports.Checkin = async function(req, res){
     var visitorInfo = {
         Name: req.body.Visitor.Name,
         VehicleNo: req.body.Visitor.VehicleNo,
-        Company: req.body.Visitor.Company,
-        Phone: req.body.Visitor.Phone
+        // Company: req.body.Visitor.Company,
+        // Phone: req.body.Visitor.Phone
     }
 
     // check if valid visitor 
@@ -410,7 +410,7 @@ module.exports.Checkin = async function(req, res){
 
     // Populate new visitor data
     visitorInfo['Active'] = true;
-
+    req.body.Item['Active'] = true;
     var newVisitorLog = new dbVistorLog({
         PassId: req.body.PassId, // incremented automatically on save
         Visitor: visitorInfo,
