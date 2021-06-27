@@ -211,6 +211,9 @@
             <div class="col-md-12">
               <!-- <div class="panel-heading">List Of Visitors</div> -->
               <div class="panel-body">
+
+                <div class="table-responsive" id="idVistorTable"></div>
+<!-- 
                   <div class="table-responsive">
                       <table class="table table-striped table-bordered" id="idVistorTable">
                           <thead>
@@ -230,7 +233,7 @@
                           </thead>
                           <tbody id="idVistorTableBody"></tbody>
                       </table>
-                  </div>
+                  </div> -->
                   <!-- <div class="row">
                       <div class="col-md-12 text-center">
                           <button class="btn btn-default btn-xs pgBtnPrev"><i class="fa fa-arrow-circle-left"></i> Previous</button>
@@ -244,75 +247,90 @@
 
         <div id="idSettingsTab" class="tab-pane fade in panel panel-default" role="tabpanel">
           
-          <div class="col-md-6">
-            <div class="panel panel-default" >
-              <div class="panel-heading">Add Visitor</div>
-              <div class="panel-body">
-                <div class="form-group-sm">
-                  <form id="idAddForm" data-toggle="validator" data-disable=true role="form">
-                    <div class="form-group">
-                      <input type="text" class="form-control"  id="idNameNew" placeholder="Name" pattern="^[\sA-Za-z0-9]{1,}$" maxlength="15" data-error="Name contains invalid characters (Allowed A-Z, a-z, 0-9)" required></input>
-                      <div class="help-block with-errors"></div>
-                    </div>
-                    <div class="form-group">
-                      <input type="text" class="form-control"  id="idVehicleNew" placeholder="Vehicle No" pattern="^[A-Za-z0-9\s]{1,}$" maxlength="15" data-error="Vehicle No contains invalid characters (Allowed A-Z, a-z, 0-9)" required></input>
-                      <div class="help-block with-errors"></div>
-                    </div>
-                    <div class="form-group">
-                      <input type="text" class="form-control"  id="idCompanyNew" placeholder="Company" pattern="^[A-Za-z0-9\s]{1,}$" maxlength="15" data-error="Company contains invalid characters (Allowed A-Z, a-z, 0-9)" required></input>
-                      <div class="help-block with-errors"></div>
-                    </div>
-                    <div class="form-group">
-                      <input type="tel" class="form-control"  id="idPhoneNew" placeholder="Phone No" minlength="10" maxlength="15" data-error="Enter valid phone no. (Min length=10, Max length=15)" required></input>
-                      <!-- pattern="^(?:\+[0-9] ?){6,14}[0-9]$"  -->
-                      <div class="help-block with-errors"></div>
-                    </div>
-                    <button type="submit" class="btn btn-success btn-sm" id="idAddvisitorBut">Add</button>
-                    <button type="reset" class="btn btn-danger btn-sm" id="idAddVisitorCancelBut">Clear</button>
-                    <label class="form-group" id="idAddVisitorStatus"></label>
-                  </form>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="panel panel-default" >
+                <div class="panel-heading">Add Visitor</div>
+                <div class="panel-body">
+                  <div class="form-group-sm">
+                    <form id="idAddForm" data-toggle="validator" data-disable=true role="form">
+                      <div class="form-group">
+                        <input type="text" class="form-control"  id="idNameNew" placeholder="Name" pattern="^[\sA-Za-z0-9]{1,}$" maxlength="15" data-error="Name contains invalid characters (Allowed A-Z, a-z, 0-9)" required></input>
+                        <div class="help-block with-errors"></div>
+                      </div>
+                      <div class="form-group">
+                        <input type="text" class="form-control"  id="idVehicleNew" placeholder="Vehicle No" pattern="^[A-Za-z0-9\s]{1,}$" maxlength="15" data-error="Vehicle No contains invalid characters (Allowed A-Z, a-z, 0-9)" required></input>
+                        <div class="help-block with-errors"></div>
+                      </div>
+                      <div class="form-group">
+                        <input type="text" class="form-control"  id="idCompanyNew" placeholder="Company" pattern="^[A-Za-z0-9\s]{1,}$" maxlength="15" data-error="Company contains invalid characters (Allowed A-Z, a-z, 0-9)" required></input>
+                        <div class="help-block with-errors"></div>
+                      </div>
+                      <div class="form-group">
+                        <input type="tel" class="form-control"  id="idPhoneNew" placeholder="Phone No" minlength="10" maxlength="15" data-error="Enter valid phone no. (Min length=10, Max length=15)" required></input>
+                        <!-- pattern="^(?:\+[0-9] ?){6,14}[0-9]$"  -->
+                        <div class="help-block with-errors"></div>
+                      </div>
+                      <button type="submit" class="btn btn-success btn-sm" id="idAddvisitorBut">Add</button>
+                      <button type="reset" class="btn btn-danger btn-sm" id="idAddVisitorCancelBut" onclick="this.form.reset();document.getElementById('idAddVisitorStatus').innerHTML='';">Clear</button>
+                      <label class="form-group" id="idAddVisitorStatus"></label>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="panel panel-default" >
+                <div class="panel-heading">Add Item</div>
+                <div class="panel-body">
+                  <div class="form-group-sm">
+                    <form id="idAddItemForm" data-toggle="validator" data-disable=true role="form">
+                      <div class="form-group">
+                        <input type="text" class="form-control"  id="idItemNameNew" placeholder="Name" pattern="^[\sA-Za-z0-9]{1,}$" maxlength="15" data-error="Name contains invalid characters (Allowed A-Z, a-z, 0-9)" required></input>
+                        <div class="help-block with-errors"></div>
+                      </div>
+                      <div class="form-group">
+                        <select class="form-control" id="idItemCurrencyNew"><option selected>INR</option></select>
+                        <!-- <input type="text" class="form-control"  id="idItemCurrencyNew" placeholder="Currency" pattern="^[A-Za-z]{1,}$" data-error="Currency code contains invalid characters (Allowed A-Z, a-z)" required></input> -->
+                        <div class="help-block with-errors"></div>
+                      </div>
+                      <div class="form-group">
+                        <input type="number" class="form-control"  id="idItemPriceNew" placeholder="Price" data-error="Only numbers are allowed." required></input>
+                        <div class="help-block with-errors"></div>
+                      </div>
+                      <div class="form-group">
+                        <select class="form-control" id="idItemUnitsNew">
+                          <option selected>kg</option>
+                          <option>cuft</option>
+                          <option>tonne</option>
+                        </select>
+
+                        <!-- <input type="text" class="form-control"  id="idItemUnitsNew" placeholder="Units" pattern="^[A-Za-z]{1,}$" data-error="Units contains invalid characters (Allowed A-Z, a-z)" required></input> -->
+                        <!-- pattern="^(?:\+[0-9] ?){6,14}[0-9]$"  -->
+                        <div class="help-block with-errors"></div>
+                      </div>
+                      <button type="submit" class="btn btn-success btn-sm" id="idAdditemBut">Add</button>
+                      <button type="reset" class="btn btn-danger btn-sm" id="idAdditemCancelBut" onclick="this.form.reset();document.getElementById('idAdditemStatus').innerHTML='';">Clear</button>
+                      <label class="form-group" id="idAdditemStatus"></label>
+                    </form>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="col-md-6">
-            <div class="panel panel-default" >
-              <div class="panel-heading">Add Item</div>
-              <div class="panel-body">
-                <div class="form-group-sm">
-                  <form id="idAddItemForm" data-toggle="validator" data-disable=true role="form">
-                    <div class="form-group">
-                      <input type="text" class="form-control"  id="idItemNameNew" placeholder="Name" pattern="^[\sA-Za-z0-9]{1,}$" maxlength="15" data-error="Name contains invalid characters (Allowed A-Z, a-z, 0-9)" required></input>
-                      <div class="help-block with-errors"></div>
-                    </div>
-                    <div class="form-group">
-                      <select class="form-control" id="idItemCurrencyNew"><option selected>INR</option></select>
-                      <!-- <input type="text" class="form-control"  id="idItemCurrencyNew" placeholder="Currency" pattern="^[A-Za-z]{1,}$" data-error="Currency code contains invalid characters (Allowed A-Z, a-z)" required></input> -->
-                      <div class="help-block with-errors"></div>
-                    </div>
-                    <div class="form-group">
-                      <input type="number" class="form-control"  id="idItemPriceNew" placeholder="Price" data-error="Only numbers are allowed." required></input>
-                      <div class="help-block with-errors"></div>
-                    </div>
-                    <div class="form-group">
-                      <select class="form-control" id="idItemUnitsNew">
-                        <option selected>kg</option>
-                        <option>cuft</option>
-                        <option>tonne</option>
-                      </select>
 
-                      <!-- <input type="text" class="form-control"  id="idItemUnitsNew" placeholder="Units" pattern="^[A-Za-z]{1,}$" data-error="Units contains invalid characters (Allowed A-Z, a-z)" required></input> -->
-                      <!-- pattern="^(?:\+[0-9] ?){6,14}[0-9]$"  -->
-                      <div class="help-block with-errors"></div>
-                    </div>
-                    <button type="submit" class="btn btn-success btn-sm" id="idAdditemBut">Add</button>
-                    <button type="reset" class="btn btn-danger btn-sm" id="idAdditemCancelBut">Clear</button>
-                    <label class="form-group" id="idAdditemStatus"></label>
-                  </form>
-                </div>
-              </div>
+          <div class="row">
+
+            <div class="col-md-6" >
+              <div class="table-responsive" id="idTableVisitors"></div>
             </div>
+
+            <div class="col-md-6" >
+              <div class="table-responsive" id="idTableItems"></div>
+            </div>
+
           </div>
 
         </div>
@@ -320,7 +338,30 @@
 
         <div id="idStatsTab" class="tab-pane fade in panel panel-default" role="tabpanel">
 
-          <div class="table-responsive">
+          <div class="panel panel-default" >
+            <!-- <div class="panel-heading">Month wise</div> -->
+            <div class="panel-body">
+              <div class="table-responsive" id="idTable1"></div>
+            </div>
+          </div>
+
+
+          <div class="panel panel-default" >
+            <!-- <div class="panel-heading">Item wise</div> -->
+            <div class="panel-body">
+              <div class="table-responsive" id="idTable2"></div>
+            </div>
+          </div>
+
+
+          <div class="panel panel-default" >
+            <!-- <div class="panel-heading">Visitor wise</div> -->
+            <div class="panel-body">
+              <div class="table-responsive" id="idTable3"></div>
+            </div>
+          </div>
+
+          <!-- <div class="table-responsive">
             <table class="table table-striped table-bordered" id="idItemTable">
                 <thead>
                     <tr>
@@ -356,7 +397,7 @@
               <tbody id="idMonthlyVisitTableBody"></tbody>
             </table>
 
-          </div>
+          </div> -->
 
         </div>
           

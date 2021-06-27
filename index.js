@@ -1,13 +1,18 @@
 const express = require('express');
 const Dinero = require('dinero.js');
+const moment = require('moment');
+const momentTz = require('moment-timezone');
+
+require("moment/min/locales.min");
 
 let config = JSON.parse(require('fs').readFileSync('config.json'));
 
-Dinero.defaultCurrency = config.CurrencyCode
-Dinero.defaultPrecision = config.CurrencyPrecision
+Dinero.defaultCurrency = config.CurrencyCode;
+Dinero.defaultPrecision = config.CurrencyPrecision;
+moment.locale(config.Locale);
+moment.tz.setDefault(config.TimeZone);
 
 const utils = require('./server_utils');
-const mongoose = require('./dbconnect');
 
 const app = express();
 app.use(express.static(__dirname));
@@ -63,6 +68,6 @@ app.get('/items', async (req, res) => {
     await utils.GetItemsList(req, res);
 })
 
-// app.get('/visitorinfo', async (req, res) => {
-//     await utils.GetVisitorInfo(req, res);
-// })
+app.get('/stats', async (req, res) => {
+    await utils.GetStats(req, res);
+})

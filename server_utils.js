@@ -1,4 +1,5 @@
 const mongoose = require('./dbconnect');
+const moment = require('moment');
 // const AutoIncrement = require('mongoose-sequence')(mongoose);
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
@@ -22,8 +23,8 @@ var VisitorLogSchema = new mongoose.Schema({
     PassId:{ type: Number, required: true },
     Visitor: { type: VisitorSchema, required: true },
     Item: {type: ItemSchema, required: true}, 
-    TimeIn:{ type: Date, default: Date.now() },
-    TimeOut:{ type: Date, default: Date.now() },
+    TimeIn:{ type: Date, default: moment().toDate() },
+    TimeOut:{ type: Date, default: moment().toDate() },
     EntryWeight: {type: Number, required: true},
     ExitWeight: {type: Number, required: true},
     Price : {type: Number, required: true},
@@ -40,9 +41,8 @@ const dbVistorLog = mongoose.model('VisitorLogs', VisitorLogSchema);
 module.exports.GetVisitorLogs = async function(req, res){
     // Retrieve only todays data for display on gui
     console.log("Getting all Visitors log..");
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-    dbVistorLog.find({TimeIn: {$gte: today}}, null, {sort: {TimeIn: -1}}, async function(error, docs){
+    const yesterday = moment().subtract(1, 'days').toDate();
+    dbVistorLog.find({TimeIn: {$gte: yesterday}}, '-_id -__v', {sort: {TimeIn: -1}}, async function(error, docs){
         if(error)
             await res.status(400).send(JSON.stringify(error));
         if(docs)
@@ -53,7 +53,7 @@ module.exports.GetVisitorLogs = async function(req, res){
 module.exports.GetItemsList = async function(req, res){
     // Retrieve only todays data for display on gui
     console.log("Getting all Items list..");
-    dbItem.find({Active: true}, null, {sort: {Date: -1}}, async function(error, docs){
+    dbItem.find({Active: true}, '-_id -__v', {sort: {Date: -1}}, async function(error, docs){
         if(error)
             await res.status(400).send(JSON.stringify(error));
         if(docs)
@@ -140,7 +140,7 @@ module.exports.SetItemList = async function(req, res){
 module.exports.GetVisitors = async function(req, res){
     // Retrieve only todays data for display on gui
     console.log("Getting all Visitors data..");
-    dbVistor.find({Active: true}, null, null, async function(error, docs){
+    dbVistor.find({Active: true}, '-_id -__v', null, async function(error, docs){
         if(error)
             await res.status(400).send(JSON.stringify(error));
         if(docs)
@@ -157,7 +157,7 @@ module.exports.SearchVisitors = async function(req, res){
         }
     }
     req.body['Active'] = true;
-    dbVistor.find(req.body, null, null, async function(error, docs){
+    dbVistor.find(req.body, '-_id -__v', null, async function(error, docs){
         if(error)
             await res.status(400).send(JSON.stringify(error));
         if(docs)
@@ -165,25 +165,89 @@ module.exports.SearchVisitors = async function(req, res){
     });
 }
 
-module.exports.GetVisitorInfo = async function(req, res){
-    var info = {
-        "TotalCredit": 0, // total credit
-        "MonthWise": 0, // month, total visits, sum price, sum credit
-        "ItemWise": 0, // items, total weight, sum price, sum credit
-    }
-}
+module.exports.GetStats = async function(req, res){
 
-module.exports.GetVisitInfo = async function(req, res){
-    var info = {
-        "VisitorWise": 0, // visitors, total price, credit
-        "ItemWise": 0, // visitors, items, total weight, total price
-    }
+    // Table1: month, visits, price, credit
+    // Table2: item, visits, price, credit
+    // Table3: visitor, visits, price, credit
+
+    const minDate = moment().subtract(2, 'years').toDate();
+    let table1 = await dbVistorLog.aggregate([
+        // First Stage
+        // match data from last 2 years
+        {
+            $match : { "TimeIn": { $gte: minDate } }
+        },
+        {
+          $group: {
+            // Each `_id` must be unique, so if there are multiple
+            // documents with the same age, MongoDB will increment `count`.
+            _id: { $dateToString: { format: "%m-%Y", date: "$TimeIn" } },
+            NumVisits: { $sum: 1 },
+            TotalPrice: { $sum: "$Price" },
+            TotalCredit: { $sum: "$Credit" }
+          }
+        }
+      ]);
+    // console.log(table1)
+
+    let table2 = await dbVistorLog.aggregate([
+        // First Stage
+        // match data from last 2 years
+        {
+            $match : { "TimeIn": { $gte: minDate } }
+        },
+        {
+          $group: {
+            // Each `_id` must be unique, so if there are multiple
+            // documents with the same age, MongoDB will increment `count`.
+            _id: "$Item.Name",
+            NumVisits: { $sum: 1 },
+            TotalPrice: { $sum: "$Price" },
+            TotalCredit: { $sum: "$Credit" }
+          }
+        }
+      ]);
+    // console.log(table2)
+
+    let table3 = await dbVistorLog.aggregate([
+        // First Stage
+        // match data from last 2 years
+        {
+            $match : { "TimeIn": { $gte: minDate } }
+        },
+        {
+          $group: {
+            // Each `_id` must be unique, so if there are multiple
+            // documents with the same age, MongoDB will increment `count`.
+            _id: "$Visitor.Name",
+            NumVisits: { $sum: 1 },
+            TotalPrice: { $sum: "$Price" },
+            TotalCredit: { $sum: "$Credit" }
+          }
+        }
+      ]);
+    // console.log(table3)
+
+    res.status(200).send(JSON.stringify(
+        {
+            "table1": table1,
+            "table2": table2,
+            "table3": table3,
+        }
+    ));
 }
 
 module.exports.checkVisitorInDb = async function(visitor){
     // check if visitor already available
     var ret = [-1, 'Error in querying visitor from database'];
-    const docs = await dbVistor.find(visitor).exec();
+    const visitorFilter = {
+        $or:[
+            {Name: visitor.Name},
+            {VehicleNo: visitor.VehicleNo}
+        ]
+    }
+    const docs = await dbVistor.find(visitorFilter, '-_id -__v').exec();
     if (docs != null)
     {
         let numActiveVisitors = 0;
@@ -194,14 +258,14 @@ module.exports.checkVisitorInDb = async function(visitor){
         if (numActiveVisitors > 1)
         {
             console.log(docs);
-            ret = [-2, `Found ${docs.length-1} duplicate visitors in database`];
+            ret = [docs.length, `Found ${docs.length-1} duplicate visitors in database`];
         }
 
         if (numActiveVisitors == 0){
-            ret = [-3, `Visitors not found in database`];
+            ret = [0, `Visitors not found in database`];
         }
         else
-            ret = [0, 'OK'];
+            ret = [1, '1 Visitor found in the database'];
     }
     return ret;
 }
@@ -220,7 +284,7 @@ module.exports.AddVisitor = async function(req, res){
     console.log("Adding: " + visitor);
 
     const [err, errmsg] = await this.checkVisitorInDb(visitor);
-    if(err < 0)
+    if(err != 0)
     {
         await res.status(400).send(errmsg);
         return;
@@ -252,8 +316,7 @@ module.exports.AddVisitor = async function(req, res){
 module.exports.Checkin = async function(req, res){
 
     // req body is parsed as json by default (set in index.js)
-    const now = new Date();
-    const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    const yesterday = moment().subtract(1, 'days').toDate();
 
     var visitorInfo = {
         Name: req.body.Visitor.Name,
@@ -264,7 +327,7 @@ module.exports.Checkin = async function(req, res){
 
     // check if valid visitor 
     const [err, errmsg] = await this.checkVisitorInDb(visitorInfo);
-    if(err < 0)
+    if(err <= 0)
     {
         await res.status(400).send(errmsg);
         return;
@@ -290,7 +353,7 @@ module.exports.Checkin = async function(req, res){
     var newVisitorLog = new dbVistorLog({
         PassId: req.body.PassId, // incremented automatically on save
         Visitor: visitorInfo,
-        TimeIn: Date.now(),
+        TimeIn: moment().toDate(),
         TimeOut: null,
         Item: req.body.Item,
         EntryWeight: req.body.EntryWeight,
@@ -331,7 +394,7 @@ module.exports.Checkout = async function(req, res){
             CheckedIn: true
         }, 
         {
-            TimeOut: Date.now(), 
+            TimeOut: moment().toDate(), 
             ExitWeight: req.body.ExitWeight,
             Price: req.body.Price,
             Paid: req.body.Paid,

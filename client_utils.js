@@ -2,12 +2,14 @@ let gVisitors = {};
 let gVisitorLogs = {};
 let gVisitorsToday = {};
 let gItems = {};
+let gStats = {};
 
 window.onload = function() { 
     // need to first update visitor logs because visitors need logs to sort checkedin/checkedout based on logs
     reqVisitorLogs();
     reqItems();
-    reqVisitors();
+    reqVisitors(); 
+    reqStats();
 }
 $(document).ajaxStop(function(){
     // window.location.reload();
@@ -158,6 +160,17 @@ function updateItemsList(items){
         option.text = val.Name;
         itemsListIn.add(option);
     });
+
+    const dataTable = JSON.parse(JSON.stringify(items));
+    var table = new Tabulator("#idTableItems", {
+        autoColumns:true,
+        layout:"fitDataStretch",
+        headerVisible:true,
+        pagination: "local",
+        paginationSize: 5,
+        paginationSizeSelector: true,
+        data:dataTable, //set initial table data
+    });
 }
 
 // Updates vistor table and checkout dropdown lists based on GET request data (/refresh) from server
@@ -209,6 +222,18 @@ function updateVisitorsList(visitors){
             vehiclesListIn.add(option2);
         }
     });
+
+    const dataTable = JSON.parse(JSON.stringify(visitors));
+    var table = new Tabulator("#idTableVisitors", {
+        autoColumns:true,
+        layout:"fitDataStretch",
+        headerVisible:true,
+        pagination: "local",
+        paginationSize: 5,
+        paginationSizeSelector: true,
+        data:dataTable, //set initial table data
+    });
+
 }
 
 function updatePrice(items)
@@ -235,58 +260,142 @@ function updateVisitorTable(visitorlogs){
     gVisitorLogs = JSON.parse(JSON.stringify(visitorlogs));
     // console.log(gVisitorLogs)
 
-    document.getElementById("idTotalVistsCnt").innerHTML = gVisitorLogs.length.toString();
-    let dashboard = document.getElementById("idVistorTable");
+    // copy table data, because if Tabulator's mutator is used, it mutates data in table
+    const VisitorLogs = JSON.parse(JSON.stringify(gVisitorLogs));
 
-    // delete old entries
-    const tableRowCount = dashboard.rows.length;
-    for(var i=1; i<tableRowCount; i++)
-        dashboard.deleteRow(1);
+    var table = new Tabulator("#idVistorTable", {
+        autoColumns:true,
+        layout:"fitDataStretch",
+        pagination: "local",
+        paginationSize: 20,
+        paginationSizeSelector: true,
+        headerVisible:true,
+        autoColumnsDefinitions:function(definitions){
+            //definitions - array of column definition objects
+            definitions.forEach((column) => {
+                if (column.field == "Visitor") column.field = "Visitor.Name";
+                if (column.field == "Item") column.field = "Item.Name";
+                if (column.field == "TimeIn" || column.field == "TimeOut") {
+                    column.formatter = "datetime";
+                    column.formatterParams = {
+                        inputFormat:"YYYY-MM-DDTHH:mm:ssZ",
+                        outputFormat:"DD/MM/YYYY HH:mm:ss",
+                        invalidPlaceholder:"(invalid date)",
+                    }
+                }
+                if (column.field == "CheckedIn") {
+                    column.mutator = function (value, data, type, params, component){
+                        //value - original value of the cell
+                        //data - the data for the row
+                        //type - the type of mutation occurring  (data|edit)
+                        //params - the mutatorParams object from the column definition
+                        //component - when the "type" argument is "edit", this contains the cell component for the edited cell, otherwise it is the column component for the column
+                        return !value; 
+                    };
+                    column.title = "Checked Out?";
+                    column.formatter = "tickCross";
+                }
+                if (column.field == "EntryWeight" || column.field == "ExitWeight") {
+                    column.mutator = function (value, data, type, params, component){
+                        return value.toString() + " " + data.Item.Units;
+                    }
+                }
+                if (column.field == "Price" || column.field == "Paid"  || column.field == "Credit") {
+                    column.mutator = function (value, data, type, params, component){
+                        return  value.toString() + " " + data.Item.Currency;
+                    }
+                }
+                // if (column.field == "TimeIn") column.field = "Item.Name";
+                // column.headerFilter = true; // add header filter to every column
+            });
+            return definitions;
+        },
+        data:VisitorLogs, //set initial table data
+    });
 
     gVisitorsToday = {}
-    // populate new entries
     for(var i=0; i<gVisitorLogs.length; i++){
-        let row = dashboard.insertRow(i+1);
-        row.insertCell(0).innerHTML = gVisitorLogs[i].PassId;
-        row.insertCell(1).innerHTML = gVisitorLogs[i].Visitor.Name;
-        row.insertCell(2).innerHTML = gVisitorLogs[i].Visitor.VehicleNo;
-        row.insertCell(3).innerHTML = gVisitorLogs[i].Visitor.Phone;
-        row.insertCell(4).innerHTML = moment(gVisitorLogs[i].TimeIn).format("DD/MM/YYYY HH:mm:ss");
-        row.insertCell(5).innerHTML = moment(gVisitorLogs[i].TimeOut).format("DD/MM/YYYY HH:mm:ss");
-        row.insertCell(6).innerHTML = gVisitorLogs[i].Item.Name.toString();
-        row.insertCell(7).innerHTML = gVisitorLogs[i].EntryWeight.toString() + " " + gVisitorLogs[i].Item.Units;
-        row.insertCell(8).innerHTML = gVisitorLogs[i].ExitWeight.toString() + " " + gVisitorLogs[i].Item.Units;
-        var amt = calcPrice(gVisitorLogs[i].EntryWeight, gVisitorLogs[i].ExitWeight, gVisitorLogs[i].Item);
-        row.insertCell(9).innerHTML = gVisitorLogs[i].Item.Currency + " " + amt.toString();
-
         if (gVisitorLogs[i].Visitor.VehicleNo in gVisitorsToday)
             gVisitorsToday[gVisitorLogs[i].Visitor.VehicleNo] += 1;
         else
             gVisitorsToday[gVisitorLogs[i].Visitor.VehicleNo] = 1;
-
-        let checkedin = row.insertCell(10);
-        if(gVisitorLogs[i].CheckedIn)
-        {
-            checkedin.innerHTML = "CHECKED IN";
-            checkedin.style.backgroundColor = "limegreen";
-        }
-        else
-        {
-            checkedin.innerHTML = "CHECKED OUT";
-            checkedin.style.backgroundColor = "gray";
-        }
     }
+
+    document.getElementById("idTotalVistsCnt").innerHTML = gVisitorLogs.length.toString();
     document.getElementById("idTotalVistorsCnt").innerHTML = Object.keys(gVisitorsToday).length.toString();
 }
 
 function updateWeighUnits(obj){
     var item = getItemByName(obj.value);
     document.getElementById('idEntryWeightInUnits').innerHTML = item.Units;
-    document.getElementById('idExitWeightInUnits').innerHTML = item.Units;
+    // document.getElementById('idExitWeightInUnits').innerHTML = item.Units;
     document.getElementById("idCurrencyCreditIn").innerHTML = item.Currency;
-
 }
 
+function updateStats(stats)
+{
+
+    gStats = JSON.parse(JSON.stringify(stats));
+    const dataTable = JSON.parse(JSON.stringify(stats));
+
+    var table1 = new Tabulator("#idTable1", {
+        autoColumns:true,
+        layout:"fitDataStretch",
+        headerVisible:true,
+        autoColumnsDefinitions:function(definitions){
+            //definitions - array of column definition objects
+            definitions.forEach((column) => {
+                if (column.field == "_id") {
+                    column.title = "Month-Year";
+                }
+            });
+            return definitions;
+        },
+        pagination: "local",
+        paginationSize: 10,
+        paginationSizeSelector: true,
+        data:dataTable['table1'], //set initial table data
+    });
+
+    var table2 = new Tabulator("#idTable2", {
+        autoColumns:true,
+        layout:"fitDataStretch",
+        headerVisible:true,
+        autoColumnsDefinitions:function(definitions){
+            //definitions - array of column definition objects
+            definitions.forEach((column) => {
+                if (column.field == "_id") {
+                    column.title = "Item";
+                }
+            });
+            return definitions;
+        },
+        pagination: "local",
+        paginationSize: 10,
+        paginationSizeSelector: true,
+        data:dataTable['table2'], //set initial table data
+    });
+
+    var table3 = new Tabulator("#idTable3", {
+        autoColumns:true,
+        layout:"fitDataStretch",
+        headerVisible:true,
+        autoColumnsDefinitions:function(definitions){
+            //definitions - array of column definition objects
+            definitions.forEach((column) => {
+                if (column.field == "_id") {
+                    column.title = "Visitor";
+                }
+            });
+            return definitions;
+        },
+        pagination: "local",
+        paginationSize: 10,
+        paginationSizeSelector: true,
+        data:dataTable['table3'], //set initial table data
+    });
+
+}
 // Sends GET request to server to get all items list
 function reqItems(){
     $.ajax({
@@ -346,6 +455,26 @@ function reqVisitorLogs(){
         },
         error: function(errorMsg){
             alert("Fetching visitor logs failed\nError: " + errorMsg.responseText);
+        }
+    });
+}
+
+function reqStats(){
+    $.ajax({
+        type: 'GET',
+        cache: false,
+        async: false,
+        contentType: 'application/json',
+        datatype: "json",
+        url: '/stats',
+        success: function(returns){
+            if(returns)
+                updateStats(JSON.parse(returns));
+            else
+                alert("Fetching stats failed\nError: Unknown");
+        },
+        error: function(errorMsg){
+            alert("Fetching stats failed\nError: " + errorMsg.responseText);
         }
     });
 }
