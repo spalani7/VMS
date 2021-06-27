@@ -409,6 +409,8 @@ module.exports.Checkin = async function(req, res){
     }
 
     // Populate new visitor data
+    visitorInfo['Company'] = req.body.Visitor.Company;
+    visitorInfo['Phone'] = req.body.Visitor.Phone;
     visitorInfo['Active'] = true;
     req.body.Item['Active'] = true;
     var newVisitorLog = new dbVistorLog({
