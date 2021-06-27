@@ -36,12 +36,12 @@ res.sendFile(__dirname + '/index.html')
 // Note: __dirname is the current directory you're in. 
 })
 
-app.post('/addvisitor', async (req, res) => {
-    await utils.AddVisitor(req, res);
+app.post('/modifyvisitor', async (req, res) => {
+    await utils.ModifyVisitor(req, res);
 })
 
-app.post('/additem', async (req, res) => {
-    await utils.SetItemList(req, res);
+app.post('/modifyitem', async (req, res) => {
+    await utils.ModifyItem(req, res);
 })
 
 app.post('/checkin', async (req, res) => {

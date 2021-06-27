@@ -517,21 +517,25 @@ function reqStats(){
 
 // Sends POST request to server
 $('#idAddForm').validator().on('submit', function (e) {
-
     if (e.isDefaultPrevented()) {
-      // handle the invalid form...
-    } else {
-      // everything looks good!
+        // handle the invalid form...
+    } 
+    else {
+        // everything looks good!
 
-      // uncomment if you like to stop reloading page after successfull ajax request
-      e.preventDefault();
-      reqAddVisitor();
+        // uncomment if you like to stop reloading page after successfull ajax request
+        e.preventDefault();
+        if (e.originalEvent.submitter.id == 'idAddvisitorBut')
+            reqModifyVisitor("add");
+        else if (e.originalEvent.submitter.id == 'idDelvisitorBut')
+            reqModifyVisitor("delete");
     }
   }
 );
 
-function reqAddVisitor(){
+function reqModifyVisitor(reqType){
     let data = {};
+    data.ReqType = reqType;
     data.Name = document.getElementById("idNameNew").value;
     data.VehicleNo = document.getElementById("idVehicleNew").value;
     data.Company = document.getElementById("idCompanyNew").value;
@@ -543,21 +547,21 @@ function reqAddVisitor(){
         async: true,
         contentType: 'application/json',
         datatype: "json",
-        url: '/addvisitor',
+        url: '/modifyvisitor',
         success: function(returns){
             if(returns){
                 document.getElementById("idAddForm").reset();
-                document.getElementById("idAddVisitorStatus").innerHTML = "Visitor added successfully!";
+                document.getElementById("idAddVisitorStatus").innerHTML = "Visitor modified successfully!";
                 // updateVisitorsList(JSON.parse(returns));
             }
             else{
                 console.log(returns);
-                document.getElementById("idAddVisitorStatus").innerHTML = "Error adding visitor.\nError: Unknown";
+                document.getElementById("idAddVisitorStatus").innerHTML = "Error: Unknown";
             }
         },
         error: function(errorMsg){
             console.log(errorMsg);
-            document.getElementById("idAddVisitorStatus").innerHTML = "Error adding visitor.\nError: " + errorMsg.responseText;
+            document.getElementById("idAddVisitorStatus").innerHTML = "Error: " + errorMsg.responseText;
         }
     });
 }
@@ -566,18 +570,23 @@ function reqAddVisitor(){
 $('#idAddItemForm').validator().on('submit', function (e) {
     if (e.isDefaultPrevented()) {
       // handle the invalid form...
-    } else {
+    } 
+    else {
       // everything looks good!
 
       // uncomment if you like to stop reloading page after successfull ajax request
-      e.preventDefault();
-      reqAddItem();
+        e.preventDefault();
+        if (e.originalEvent.submitter.id == 'idAdditemBut')
+            reqModifyItem("add");
+        else if (e.originalEvent.submitter.id == 'idDelitemBut')
+            reqModifyItem("delete");
     }
   }
 );
 
-function reqAddItem(){
+function reqModifyItem(reqType){
     let data = {};
+    data.ReqType = reqType;
     data.Name = document.getElementById("idItemNameNew").value;
     data.Currency = document.getElementById("idItemCurrencyNew").value;
     data.Price = document.getElementById("idItemPriceNew").value;
@@ -589,21 +598,21 @@ function reqAddItem(){
         async: true,
         contentType: 'application/json',
         datatype: "json",
-        url: '/additem',
+        url: '/modifyitem',
         success: function(returns){
             if(returns){
                 document.getElementById("idAddItemForm").reset();
-                document.getElementById("idAdditemStatus").innerHTML = "Item added successfully!";
+                document.getElementById("idAdditemStatus").innerHTML = "Item modified successfully!";
                 // updateItemsList(JSON.parse(returns));
             }
             else{
                 console.log(returns);
-                document.getElementById("idAdditemStatus").innerHTML = "Error adding item.\nError: Unknown";
+                document.getElementById("idAdditemStatus").innerHTML = "Error: Unknown";
             }
         },
         error: function(errorMsg){
             console.log(errorMsg);
-            document.getElementById("idAdditemStatus").innerHTML = "Error adding item.\nError: " + errorMsg.responseText;
+            document.getElementById("idAdditemStatus").innerHTML = "Error: " + errorMsg.responseText;
         }
     });
 }

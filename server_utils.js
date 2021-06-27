@@ -4,6 +4,7 @@ const moment = require('moment');
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
 var VisitorSchema = new mongoose.Schema({
+    Date:{ type: Date, default: moment().toDate() },
     Name: { type: String, required: true },
     VehicleNo:{ type: String, required: true },
     Company:{ type: String, required: true },
@@ -12,6 +13,7 @@ var VisitorSchema = new mongoose.Schema({
 });
 
 var ItemSchema = new mongoose.Schema({
+    Date:{ type: Date, default: moment().toDate() },
     Name:{ type: String, required: true },
     Price:{ type: Number, required: true },
     Currency:{ type: String, required: true },
@@ -53,7 +55,7 @@ module.exports.GetVisitorLogs = async function(req, res){
 module.exports.GetItemsList = async function(req, res){
     // Retrieve only todays data for display on gui
     console.log("Getting all Items list..");
-    dbItem.find({Active: true}, '-_id -__v', {sort: {Date: -1}}, async function(error, docs){
+    dbItem.find({Active: true}, '-_id -__v -Active -Date', {sort: {Date: -1}}, async function(error, docs){
         if(error)
             await res.status(400).send(JSON.stringify(error));
         if(docs)
@@ -99,48 +101,80 @@ module.exports.GetItemsList = async function(req, res){
 //     });
 // }
 
-module.exports.SetItemList = async function(req, res){
-    var item = {
-        Name:req.body.Name,
-        Price:req.body.Price,
-        Currency:req.body.Currency,
-        Units:req.body.Units,
-        Active:true
-    };
-    var docs = await dbItem.find({Name:req.body.Name}).exec();
-    if (docs.length == 0)
+module.exports.ModifyItem = async function(req, res){
+
+    var docs = await dbItem.find({Name:req.body.Name, Active: true}).exec();
+    if (docs)
     {
-        // validate schema
-        var newItem = new dbItem(item);
-        let error = newItem.validateSync();
-        if(error) {
-            console.log(error);
-            await res.status(400).send(JSON.stringify(error));
-            return;
+        if (req.body.ReqType == "add"){
+
+            if(docs.length > 0){
+                await res.status(400).send("Item already present with same name.");
+                return;
+            }
+
+            // validate schema
+            var newItem = new dbItem({
+                Name:req.body.Name,
+                Price:req.body.Price,
+                Currency:req.body.Currency,
+                Units:req.body.Units,
+                Active:true
+            });
+            let error = newItem.validateSync();
+            if(error) {
+                console.log(error);
+                await res.status(400).send(JSON.stringify(error));
+                return;
+            }
+
+            // Save new visitor to database
+            newItem.save()
+                .then(async (visitor) => {
+                    await res.status(200).send("OK");
+                })
+                .catch(async (error) => {
+                    //When there are errors We handle them here
+                    await res.status(400).send(JSON.stringify(error));
+                });
         }
 
-        // Save new visitor to database
-        newItem.save()
-            .then(async (visitor) => {
-                await res.status(200).send("OK");
-            })
-            .catch(async (error) => {
-                //When there are errors We handle them here
-                await res.status(400).send(JSON.stringify(error));
-            });
+        else if (req.body.ReqType == "delete"){
+            if (docs.length <= 0){
+                await res.status(400).send("Item not found in database.");
+                return;
+            }
+
+            dbItem.findOneAndUpdate(
+                {Name:req.body.Name, Active: true}, 
+                {
+                    Active: false
+                }, 
+                {
+                    new: true
+                },
+                async function(error, doc) {
+                    if(error) {
+                        await res.status(400).send(JSON.stringify(error));
+                    }
+                    if(doc){
+                        await res.status(200).send("OK");
+                    }
+                }
+            );
+        }
+        else
+            await res.status(400).send(`Unknown request: ${req.body.ReqType} to modify visitor.`);
     }
     else
-    {
-        var errText = "Item " + req.body.Name + " already present in database, skipped adding.";
-        console.log(errText);
-        await res.status(400).send(JSON.stringify(errText));
-    }
+        await res.status(400).send("Item not found in database.");
+
 }
 
 module.exports.GetVisitors = async function(req, res){
     // Retrieve only todays data for display on gui
     console.log("Getting all Visitors data..");
-    dbVistor.find({Active: true}, '-_id -__v', null, async function(error, docs){
+    dbVistor.find({Active: true}, '-_id -__v -Active -Date', null, async function(error, docs){
         if(error)
             await res.status(400).send(JSON.stringify(error));
         if(docs)
@@ -157,7 +191,7 @@ module.exports.SearchVisitors = async function(req, res){
         }
     }
     req.body['Active'] = true;
-    dbVistor.find(req.body, '-_id -__v', null, async function(error, docs){
+    dbVistor.find(req.body, '-_id -__v -Active -Date', null, async function(error, docs){
         if(error)
             await res.status(400).send(JSON.stringify(error));
         if(docs)
@@ -270,46 +304,73 @@ module.exports.checkVisitorInDb = async function(visitor){
     return ret;
 }
 
-module.exports.AddVisitor = async function(req, res){
+module.exports.ModifyVisitor = async function(req, res){
 
     // req body is parsed as json by default (set in index.js)
     console.log(req.body)
-    // Populate new visitor data
+    // filter to check num of active users with same info
     var visitor = {
         Name:req.body.Name, 
         VehicleNo:req.body.VehicleNo, 
-        Company:req.body.Company, 
-        Phone:req.body.Phone, 
+        // Company:req.body.Company, 
+        // Phone:req.body.Phone, 
+        Active: true
     };
-    console.log("Adding: " + visitor);
+    console.log(req.body.ReqType, visitor);
 
     const [err, errmsg] = await this.checkVisitorInDb(visitor);
-    if(err != 0)
+    if( (req.body.ReqType == "add" && err != 0) 
+        || (req.body.ReqType == "delete" && err <= 0)
+    )
     {
         await res.status(400).send(errmsg);
         return;
     }
 
-    // Create visitor
-    visitor['Active'] = true;
-    var newVisitor = new dbVistor(visitor);
+    if(req.body.ReqType == "add")
+    {
+        // Create visitor
+        var newVisitor = new dbVistor(visitor);
 
-    // validate visitor
-    let error = newVisitor.validateSync();
-    if(error) {
-        await res.status(400).send(error['message']);
-        return;
+        // validate visitor
+        let error = newVisitor.validateSync();
+        if(error) {
+            await res.status(400).send(error['message']);
+            return;
+        }
+
+        // Saving visitor
+        await newVisitor.save()
+            .then(async (visitor) => {
+                await res.status(200).send("OK");
+            })
+            .catch(async (error) => {
+                //When there are errors We handle them here
+                await res.status(400).send(JSON.stringify(error));
+            });
     }
-
-    // Saving visitor
-    await newVisitor.save()
-        .then(async (visitor) => {
-            await res.status(200).send("OK");
-        })
-        .catch(async (error) => {
-            //When there are errors We handle them here
-            await res.status(400).send(JSON.stringify(error));
-        });
+    else if(req.body.ReqType == "delete")
+    {
+        dbVistor.findOneAndUpdate(
+            visitor, 
+            {
+                Active: false
+            }, 
+            {
+                new: true
+            },
+            async function(error, doc) {
+                if(error) {
+                    await res.status(400).send(JSON.stringify(error));
+                }
+                if(doc){
+                    await res.status(200).send("OK");
+                }
+            }
+        );
+    }
+    else
+        await res.status(400).send(`Unknown request: ${req.body.ReqType} to modify visitor.`);
     // const docs = await dbVistor.find({}, null, {sort: {TimeIn: -1}});
 }
 
