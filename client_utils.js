@@ -1,6 +1,5 @@
 let gVisitors = {};
 let gVisitorLogs = {};
-let gVisitorsToday = {};
 let gItems = {};
 let gStats = {};
 
@@ -120,6 +119,13 @@ function updateVisitorInfo(obj){
             document.getElementById("idVehiclesIn").value = gVisitors[visitorIdx].VehicleNo;
             document.getElementById("idCompanyIn").value = gVisitors[visitorIdx].Company;
             document.getElementById("idPhoneIn").value = gVisitors[visitorIdx].Phone;
+            document.getElementById("idCurrencyCreditIn").innerHTML = 'INR';
+            document.getElementById("idCreditValueIn").value = 0;
+            gStats['table3'].forEach((val,idx)=>{
+                if (val._id == gVisitorLogs[visitorLogIdx].Visitor.Name){
+                    document.getElementById("idCreditValueIn").value = val.TotalCredit;
+                }
+            });
         }
     }
     else
@@ -313,16 +319,16 @@ function updateVisitorTable(visitorlogs){
         data:VisitorLogs, //set initial table data
     });
 
-    gVisitorsToday = {}
+    var VisitorsToday = {}
     for(var i=0; i<gVisitorLogs.length; i++){
-        if (gVisitorLogs[i].Visitor.VehicleNo in gVisitorsToday)
-            gVisitorsToday[gVisitorLogs[i].Visitor.VehicleNo] += 1;
+        if (gVisitorLogs[i].Visitor.VehicleNo in VisitorsToday)
+            VisitorsToday[gVisitorLogs[i].Visitor.VehicleNo] += 1;
         else
-            gVisitorsToday[gVisitorLogs[i].Visitor.VehicleNo] = 1;
+            VisitorsToday[gVisitorLogs[i].Visitor.VehicleNo] = 1;
     }
 
     document.getElementById("idTotalVistsCnt").innerHTML = gVisitorLogs.length.toString();
-    document.getElementById("idTotalVistorsCnt").innerHTML = Object.keys(gVisitorsToday).length.toString();
+    document.getElementById("idTotalVistorsCnt").innerHTML = Object.keys(VisitorsToday).length.toString();
 }
 
 function updateWeighUnits(obj){
