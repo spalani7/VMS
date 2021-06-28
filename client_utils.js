@@ -176,6 +176,13 @@ function updateItemsList(items){
         paginationSize: 5,
         paginationSizeSelector: true,
         data:dataTable, //set initial table data
+        rowClick:function(e, row){
+            var rowData = row.getData();
+            document.getElementById("idItemNameNew").value = rowData.Name;
+            document.getElementById("idItemCurrencyNew").value = rowData.Currency;
+            document.getElementById("idItemPriceNew").value = rowData.Price;
+            document.getElementById("idItemUnitsNew").value = rowData.Units;
+        },
     });
 }
 
@@ -238,8 +245,14 @@ function updateVisitorsList(visitors){
         paginationSize: 5,
         paginationSizeSelector: true,
         data:dataTable, //set initial table data
+        rowClick:function(e, row){
+            var rowData = row.getData();
+            document.getElementById("idNameNew").value = rowData.Name;
+            document.getElementById("idVehicleNew").value = rowData.VehicleNo;
+            document.getElementById("idCompanyNew").value = rowData.Company;
+            document.getElementById("idPhoneNew").value = rowData.Phone;
+        },    
     });
-
 }
 
 function updatePrice(items)
