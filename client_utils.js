@@ -9,6 +9,16 @@ window.onload = function() {
     reqItems();
     reqVisitors(); 
     reqStats();
+    $('#from-datepicker').datepicker({
+        dateFormat: "dd-mm-yy",
+        changeMonth: true,
+        changeYear: true
+    });
+    $('#to-datepicker').datepicker({
+        dateFormat: "dd-mm-yy",
+        changeMonth: true,
+        changeYear: true
+    });
 }
 $(document).ajaxStop(function(){
     // window.location.reload();
@@ -85,6 +95,112 @@ function getVisitorStatus(visitorObj)
     return (visitorLogIdx >= 0) ? gVisitorLogs[visitorLogIdx].CheckedIn : false;
 }
 
+function prepareDownload(reqtype, data)
+{
+    var mydata = JSON.parse(JSON.stringify(data));
+
+    var tables = {};
+
+    reqtype.forEach((val,idx)=>{
+
+        function dailyLog(definitions){
+            if (reqtype.includes('dailylog')) 
+            {
+                //definitions - array of column definition objects
+                definitions.forEach((column) => {
+                    if (column.field == "Visitor") column.field = "Visitor.Name";
+                    if (column.field == "Item") column.field = "Item.Name";
+                    if (column.field == "TimeIn" || column.field == "TimeOut") {
+                        // column.formatter = "datetime";
+                        // column.formatterParams = {
+                        //     inputFormat:"YYYY-MM-DDTHH:mm:ssZ",
+                        //     outputFormat:"DD/MM/YYYY HH:mm:ss",
+                        //     invalidPlaceholder:" - ",
+                        // }
+                        // formatter has no effect on the downloaded output, so using mutator
+                        column.mutator = function (value, data, type, params, component){
+                            return moment(value).format("DD/MM/YYYY HH:mm:ss");
+                        }
+                    }
+                    if (column.field == "CheckedIn") {
+                        column.mutator = function (value, data, type, params, component){
+                            //value - original value of the cell
+                            //data - the data for the row
+                            //type - the type of mutation occurring  (data|edit)
+                            //params - the mutatorParams object from the column definition
+                            //component - when the "type" argument is "edit", this contains the cell component for the edited cell, otherwise it is the column component for the column
+                            return !value; 
+                        };
+                        column.title = "Checked Out?";
+                        column.formatter = "tickCross";
+                    }
+                    if (column.field == "EntryWeight" || column.field == "ExitWeight") {
+                        column.mutator = function (value, data, type, params, component){
+                            if(value) return value.toString() + " " + data.Item.Units;
+                            else return "-";
+                        }
+                    }
+                    if (column.field == "Price" || column.field == "Paid"  || column.field == "Credit") {
+                        column.mutator = function (value, data, type, params, component){
+                            if(value) return value.toString() + " " + data.Item.Currency;
+                            else return "-";
+                        }
+                    }
+                    // if (column.field == "TimeIn") column.field = "Item.Name";
+                    // column.headerFilter = true; // add header filter to every column
+                });
+            }
+
+            return definitions;
+        };
+
+        var table = new Tabulator(`#idStatsTable${idx+1}`, {
+            autoColumns:true,
+            layout:"fitDataStretch",
+            // pagination: "local",
+            // paginationSize: 10,
+            // paginationSizeSelector: true,
+            headerVisible:true,
+            autoColumnsDefinitions: dailyLog,
+            data:mydata[val], //set initial table data
+        });
+        tables[val] = table;
+    });
+
+    return tables;
+}
+
+function downloadXlsx(tables)
+{
+    var tablenames = Object.keys(tables);
+    var table = tables[tablenames[0]];
+    tablenames.forEach((k, idx) => {
+        tables[k] = (idx == 0) ? true : `#idStatsTable${idx+1}`;
+    });
+    console.log(tables)
+    table.download("xlsx", "data.xlsx", tables);
+}
+
+function downloadPdf(tables)
+{
+    Object.keys(tables).forEach((k)=>{
+        tables[k].download("pdf", `data_${k}.pdf`, {
+            orientation:"portrait", //set page orientation to portrait
+            title:"Daily log report", //add title to report
+            autoTable:{ //advanced table styling
+                styles: {
+                    // fillColor: [100, 255, 255]
+                    fontSize: 6 
+                }
+                // columnStyles: {
+                //     id: {fillColor: 255}
+                // },
+                // margin: {top: 60},
+            },
+        });
+    });
+}
+
 // Populates checkin/checkout forms based on Name or vehicle No
 function updateVisitorInfo(obj){
     let checkIn = (obj.id == "idVisitorsIn" || obj.id == "idVehiclesIn") ? true : false;
@@ -93,6 +209,7 @@ function updateVisitorInfo(obj){
     let visitorIdx = -1;
     let visitorLogIdx = -1;
 
+    // console.log(gVisitorLogs)
     for(var i=0; i<gVisitorLogs.length; i++)
     {
         if(gVisitorLogs[i].Visitor.Name == name || gVisitorLogs[i].Visitor.VehicleNo == vehicleNo){
@@ -122,7 +239,7 @@ function updateVisitorInfo(obj){
             document.getElementById("idCurrencyCreditIn").innerHTML = 'INR';
             document.getElementById("idCreditValueIn").value = 0;
             gStats['table3'].forEach((val,idx)=>{
-                if (val._id == gVisitorLogs[visitorLogIdx].Visitor.Name){
+                if (val._id == gVisitors[visitorIdx].Name){
                     document.getElementById("idCreditValueIn").value = val.TotalCredit;
                 }
             });
@@ -203,6 +320,15 @@ function updateVisitorsList(visitors){
     for(var i = 1; i < vehiclesListInLen.length; i++)
         vehiclesListIn.remove(i);
 
+    let visitorsListCAIn = document.getElementById("idCashAdvName");
+    let visitorsListCAInLen = visitorsListCAIn.length
+    for(var i = 1; i < visitorsListCAInLen; i++)
+        visitorsListCAIn.remove(i);
+    let vehiclesListCAIn = document.getElementById("idCashAdvVehicleNo");
+    let vehiclesListCAInLen = vehiclesListCAIn.length
+    for(var i = 1; i < vehiclesListCAInLen.length; i++)
+        vehiclesListCAIn.remove(i);
+    
     let visitorsList = document.getElementById("idVisitors");
     let visitorsListLen = visitorsList.length
     for(var i = 1; i < visitorsListLen; i++)
@@ -234,6 +360,14 @@ function updateVisitorsList(visitors){
             option2.text = val.VehicleNo;
             vehiclesListIn.add(option2);
         }
+
+        var option1 = document.createElement("option");
+        option1.text = val.Name;
+        visitorsListCAIn.add(option1);
+
+        var option2 = document.createElement("option");
+        option2.text = val.VehicleNo;
+        vehiclesListCAIn.add(option2);
     });
 
     const dataTable = JSON.parse(JSON.stringify(visitors));
@@ -253,6 +387,18 @@ function updateVisitorsList(visitors){
             document.getElementById("idPhoneNew").value = rowData.Phone;
         },    
     });
+}
+
+function updateCashAdvanceInfo(obj)
+{
+    if (obj.id == 'idCashAdvName')
+    {
+        document.getElementById("idCashAdvVehicleNo").selectedIndex = obj.selectedIndex;
+    }
+    else if (obj.id == 'idCashAdvVehicleNo')
+    {
+        document.getElementById("idCashAdvName").selectedIndex = obj.selectedIndex;
+    }
 }
 
 function updatePrice(items)
@@ -353,7 +499,6 @@ function updateWeighUnits(obj){
 
 function updateStats(stats)
 {
-
     gStats = JSON.parse(JSON.stringify(stats));
     const dataTable = JSON.parse(JSON.stringify(stats));
 
@@ -760,6 +905,114 @@ function reqCheckout(){
         }
     });
 };
+
+
+// Sends POST request to server to checkout visitor
+$('#idDownloadStatsForm').validator().on('submit', function (e) {
+    if (e.isDefaultPrevented()) {
+      // handle the invalid form...
+    } else {
+      // everything looks good!
+
+      // uncomment if you like to stop reloading page after successfull ajax request
+      e.preventDefault();
+      var reqtype = [];
+        $('input:checkbox[name=idStatsCheckbox]:checked').each(function() {
+            reqtype.push($(this).val());
+        });
+      if (e.originalEvent.submitter.id == 'idStatsDwnldXlsx')
+        download(reqtype, 'XLSX');
+      else if (e.originalEvent.submitter.id == 'idStatsDwnldPdf')
+        download(reqtype, 'PDF');
+    }
+  }
+);
+
+function download(reqType, outputType)
+{
+    let data = {};
+    data.ReqType = reqType;
+    data.dateFrom = $("#from-datepicker").datepicker("getDate");
+    data.dateTo = $("#to-datepicker").datepicker("getDate");
+    $.ajax({
+        type: 'POST',
+        data: JSON.stringify(data),
+        cache: false,
+        async: false,
+        contentType: 'application/json',
+        datatype: "json",
+        url: '/download',
+        success: function(returns){
+            if(returns){
+                var table = prepareDownload(reqType, JSON.parse(returns));
+                if (outputType == 'XLSX')
+                    downloadXlsx(table);
+                else if (outputType == 'PDF')
+                    downloadPdf(table);
+                else
+                    alert('Unknown output type in download request: '+ outputType.toString())
+            }
+            else{
+                console.log(returns);
+                alert("Download data failed\nError: Unknown");
+            }
+        },
+        error: function(errorMsg){
+            console.log(errorMsg);
+            alert("Download failed\nError: " + errorMsg.responseText);
+        }
+    });
+}
+
+// Sends POST request to server to checkout visitor
+$('#idCashAdvanceForm').validator().on('submit', function (e) {
+    if (e.isDefaultPrevented()) {
+      // handle the invalid form...
+    } else {
+      // everything looks good!
+
+      // uncomment if you like to stop reloading page after successfull ajax request
+        e.preventDefault();
+        if (e.originalEvent.submitter.id == 'idCashAdvAddBut')
+            addCashAdvance("add");
+        else if (e.originalEvent.submitter.id == 'idCashAdvDelBut')
+            addCashAdvance("delete");
+    }
+  }
+);
+
+function addCashAdvance(reqType)
+{
+    let data = {};
+    data.ReqType = reqType;
+    data.Visitor = {};
+    data.Visitor.Name = document.getElementById("idCashAdvName").value;
+    data.Visitor.VehicleNo = document.getElementById("idCashAdvVehicleNo").value;
+    data.Credit = document.getElementById("idCashAdvPrice").value;
+    data.Currency = document.getElementById("idCashAdvCurrency").value;
+    $.ajax({
+        type: 'POST',
+        data: JSON.stringify(data),
+        cache: false,
+        async: false,
+        contentType: 'application/json',
+        datatype: "json",
+        url: '/cashadvance',
+        success: function(returns){
+            if(returns){
+                document.getElementById("idCashAdvanceForm").reset();
+            }
+            else{
+                console.log(returns);
+                alert("Cash advance store failed\nError: Unknown");
+            }
+        },
+        error: function(errorMsg){
+            console.log(errorMsg);
+            alert("Cash advance store failed\nError: " + errorMsg.responseText);
+        }
+    });
+}
 
 function createCheckinInvoice(data) {
 

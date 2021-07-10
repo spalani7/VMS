@@ -13,8 +13,11 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap-theme.min.css" integrity="sha384-6pzBo3FDv/PJ8r2KRkGHifhEocL+1X2rVCTTkUfGk7/0pbek5mMa1upzvWbrUbOZ" crossorigin="anonymous">
     <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous"> -->
 
+    <!-- for date picker -->
     <link href="https://unpkg.com/tabulator-tables@4.9.3/dist/css/tabulator.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 
+    <!-- <link rel="stylesheet" href="/resources/demos/style.css"> -->
     <link rel="stylesheet" type="text/css" href="styles.css">
     <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script> -->
@@ -48,14 +51,14 @@
       </div>
 
       <ul class="nav nav-tabs">
-        <li class="active"><a data-toggle="tab" role="tab" href="#idMainTab">Main</a></li>
+        <li><a data-toggle="tab" role="tab" href="#idMainTab">Main</a></li>
         <li><a data-toggle="tab" role="tab" href="#idSettingsTab">Settings</a></li>
-        <li><a data-toggle="tab" role="tab" href="#idStatsTab">Stats</a></li>
+        <li class="active"><a data-toggle="tab" role="tab" href="#idStatsTab">Stats</a></li>
         <!-- <li><a data-toggle="tab" role="tab" href="#idInvoiceTab">Invoice</a></li> -->
       </ul>
 
       <div class="tab-content">
-        <div id="idMainTab" class="tab-pane fade in active panel panel-default" role="tabpanel">
+        <div id="idMainTab" class="tab-pane fade in panel panel-default" role="tabpanel">
 
           <div class="row">
             <div class="col-sm-6">
@@ -331,9 +334,7 @@
             </div>
           </div>
 
-
           <div class="row">
-
             <div class="col-md-6" >
               <div class="table-responsive" id="idTableVisitors"></div>
             </div>
@@ -341,18 +342,96 @@
             <div class="col-md-6" >
               <div class="table-responsive" id="idTableItems"></div>
             </div>
+          </div><br>
+
+          <div class="row">
+
+            <div class="col-md-6">
+              <div class="panel panel-default" >
+                <div class="panel-heading">Cash Advance</div>
+                <div class="panel-body">
+                  <div class="form-group-sm">
+                    <form id="idCashAdvanceForm" data-toggle="validator" data-disable=true role="form">
+                      <div class="form-group">
+                        <select class="form-control" id="idCashAdvName" onchange="updateCashAdvanceInfo(this)"><option hidden disabled selected value> -- select an option -- </option>></select>
+                        <div class="help-block with-errors"></div>
+                      </div>
+                      <div class="form-group">
+                        <select class="form-control" id="idCashAdvVehicleNo" onchange="updateCashAdvanceInfo(this)"><option hidden disabled selected value> -- select an option -- </option></select>
+                        <div class="help-block with-errors"></div>
+                      </div>
+                      <div class="form-group">
+                        <input type="number" class="form-control"  id="idCashAdvPrice" placeholder="Cash" data-error="Only numbers are allowed." required></input>
+                        <div class="help-block with-errors"></div>
+                      </div>
+                      <div class="form-group">
+                        <select class="form-control" id="idCashAdvCurrency"><option selected>INR</option></select>
+                        <div class="help-block with-errors"></div>
+                      </div>
+                      <button type="submit" class="btn btn-success btn-sm" name="add" id="idCashAdvAddBut">Add</button>
+                      <button type="submit" class="btn btn-success btn-sm" name="delete" id="idCashAdvDelBut">Delete</button>
+                      <button type="reset" class="btn btn-danger btn-sm" id="idCashAdvCancelBut" onclick="this.form.reset();document.getElementById('idCashAdvStatus').innerHTML='';">Clear</button>
+                      <label class="form-group" id="idCashAdvStatus"></label>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
 
           </div>
 
         </div>
 
 
-        <div id="idStatsTab" class="tab-pane fade in panel panel-default" role="tabpanel">
+        <div id="idStatsTab" class="tab-pane fade active in panel panel-default" role="tabpanel">
+
+          <div class="panel panel-default" >
+            <div class="panel-heading">Reports</div>
+            <div class="panel-body">
+
+              <div class="form-group-md">
+                <form id="idDownloadStatsForm" data-toggle="validator" data-disable=true role="form" autocomplete="off">
+                  
+                  <div class="input-group">
+                    <span class="input-group-addon" style="min-width:70px">From</span>
+                    <input type="text" id="from-datepicker" required/>
+                  </div><br>
+                  <div class="input-group">
+                    <span class="input-group-addon" style="min-width:70px">To</span>
+                    <input type="text" id="to-datepicker" required/>
+                  </div><br>
+
+                  <div class="input-group">
+                    <input type="checkbox" name="idStatsCheckbox" value="dailylog" aria-label="Checkbox for following text input"> Daily log</input><br>
+                    <input type="checkbox" name="idStatsCheckbox" value="itemlog" aria-label="Checkbox for following text input"> Item log</input><br>
+                    <input type="checkbox" name="idStatsCheckbox" value="visitorlog" aria-label="Checkbox for following text input"> Visitor log</input><br>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-success btn-sm" id="idStatsDwnldXlsx">Download CSV</button>
+                  <button type="submit" class="btn btn-success btn-sm" id="idStatsDwnldPdf">Download PDF</button>
+                  <div class="table-responsive" id="idStatsTable1"></div>
+                  <div class="table-responsive" id="idStatsTable2"></div>
+                  <div class="table-responsive" id="idStatsTable3"></div>
+                </form>
+              </div>
+<!-- 
+              <select class="form-control" id="idstats">
+                <option selected>Monthly-wise</option>
+                <option>Item-wise</option>
+                <option>Visitor-wise</option>
+              </select> -->
+              
+              <!-- <button id="stats-print">Print</button> -->
+            </div>
+          </div>
 
           <div class="panel panel-default" >
             <!-- <div class="panel-heading">Month wise</div> -->
             <div class="panel-body">
               <div class="table-responsive" id="idTable1"></div>
+              <!-- <button id="table1-dwnld-csv">Download CSV</button>
+              <button id="table1-dwnld-pdf">Download PDF</button>
+              <button id="table1-print">Print</button> -->
             </div>
           </div>
 
@@ -418,12 +497,20 @@
       </div>
     </div>
     <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <!-- for date picker -->
+    <script src="https://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.26.0/moment.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
     <!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script> -->
     <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script> -->
     <script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.9.3/dist/js/tabulator.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.9/validator.min.js"></script>
+    <!-- For downloading tables as XLSX -->
+    <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+    <!-- For downloading tables as PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.5/jspdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.0.5/jspdf.plugin.autotable.js"></script>
     <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/mathjs@9.4.2/lib/browser/math.js" type="text/javascript"></script>
     <script src="client_utils.js"></script>

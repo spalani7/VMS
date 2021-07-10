@@ -64,10 +64,18 @@ app.get('/visitorlogs', async (req, res) => {
     await utils.GetVisitorLogs(req, res);
 })
 
+app.post('/cashadvance', async (req, res) => {
+    await utils.ModifyCashAdvance(req, res);
+})
+
 app.get('/items', async (req, res) => {
     await utils.GetItemsList(req, res);
 })
 
 app.get('/stats', async (req, res) => {
     await utils.GetStats(req, res);
+})
+
+app.post('/download', async (req, res) => {
+    await utils.DownloadStats(req, res);
 })
