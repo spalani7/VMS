@@ -4,7 +4,7 @@ const moment = require('moment');
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
 var VisitorSchema = new mongoose.Schema({
-    Date:{ type: Date, default: moment().toDate() },
+    Date:{ type: Date, required: true },
     Name: { type: String, required: true },
     VehicleNo:{ type: String, required: true },
     Company:{ type: String, required: true },
@@ -13,12 +13,12 @@ var VisitorSchema = new mongoose.Schema({
 });
 
 var ItemSchema = new mongoose.Schema({
-    Date:{ type: Date, default: moment().toDate() },
+    Date:{ type: Date, required: true },
     Name:{ type: String, required: true },
     Price:{ type: Number, required: true }, 
     Currency:{ type: String, required: true },
     Units:{ type: String, required: true },
-    Mode:{ type: String, enum : ['Checkin','Checkout','Both'], default: 'Both', required: true},
+    CheckinOnly:{ type: Boolean, required: true, default: false},
     Active:{ type: Boolean, required: true}
 });
 
@@ -26,14 +26,14 @@ var VisitorLogSchema = new mongoose.Schema({
     Visitor: { type: mongoose.Schema.Types.ObjectId, ref: 'Visitors', required: true },
     PassId:{ type: Number, default: 0 },
     Item: { type: mongoose.Schema.Types.ObjectId, ref: 'Items', default: null },
-    TimeIn:{ type: Date, default: moment().toDate() },
+    TimeIn:{ type: Date, required: true },
     TimeOut:{ type: Date, default: null },
     EntryWeight: {type: Number, default: 0},
     ExitWeight: {type: Number, default: 0},
     Price : {type: Number, default: 0},
     Debit: {type: Number, default: 0},
     Currency:{type: String, required: true, default: 'INR'},
-    Credit:{type: Number, required: true},
+    Credit:{type: Number, default: 0},
     CheckedIn:{type: Boolean, default: false}
 });
 
@@ -358,10 +358,12 @@ module.exports.ModifyItem = async function(req, res){
 
             // validate schema
             var newItem = new dbItem({
+                Date:moment().toDate(),
                 Name:req.body.Name,
                 Price:req.body.Price,
                 Currency:req.body.Currency,
                 Units:req.body.Units,
+                CheckinOnly: req.body.CheckinOnly,
                 Active:true
             });
             let error = newItem.validateSync();
@@ -488,6 +490,8 @@ module.exports.ModifyVisitor = async function(req, res){
         // Create visitor
         visitor['Company'] = req.body.Company;
         visitor['Phone'] = req.body.Phone;
+        visitor['Date'] = moment().toDate();
+
         var newVisitor = new dbVisitor(visitor);
 
         // validate visitor
@@ -594,7 +598,7 @@ module.exports.Checkin = async function(req, res){
         TimeIn: moment().toDate(),
         Item: itemObjId,
         EntryWeight: req.body.EntryWeight,
-        CheckedIn: true, 
+        CheckedIn: !itemDocs[0].CheckinOnly, 
     });
 
     let error = newVisitorLog.validateSync();

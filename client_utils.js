@@ -2,6 +2,7 @@ let gVisitors = {};
 let gVisitorLogs = {};
 let gItems = {};
 let gStats = {};
+let gTabActiveIdx = 0;
 
 window.onload = function() { 
     // need to first update visitor logs because visitors need logs to sort checkedin/checkedout based on logs
@@ -20,6 +21,7 @@ window.onload = function() {
         changeYear: true
     });
 }
+
 $(document).ajaxStop(function(){
     // window.location.reload();
 });
@@ -290,6 +292,7 @@ function updateItemsList(items){
             document.getElementById("idItemCurrencyNew").value = rowData.Currency;
             document.getElementById("idItemPriceNew").value = rowData.Price;
             document.getElementById("idItemUnitsNew").value = rowData.Units;
+            document.getElementById("idItemCheckinOnly").checked = rowData.CheckinOnly;
         },
     });
 }
@@ -742,6 +745,7 @@ function reqModifyItem(reqType){
     data.Currency = document.getElementById("idItemCurrencyNew").value;
     data.Price = document.getElementById("idItemPriceNew").value;
     data.Units = document.getElementById("idItemUnitsNew").value;
+    data.CheckinOnly = document.getElementById("idItemCheckinOnly").checked;
     $.ajax({
         type: 'POST',
         data: JSON.stringify(data),
@@ -775,7 +779,7 @@ $('#idCheckinForm').validator().on('submit', function (e) {
     } else {
       // everything looks good!
       // uncomment if you like to stop reloading page after successfull ajax request
-    //   e.preventDefault();
+      e.preventDefault();
       reqCheckin();
     }
   }
@@ -795,7 +799,7 @@ function reqCheckin(){
     // data.Price = 0;
     // data.Debit = 0;
     // data.Credit = 0;
-    data.Currency = item.Currency;
+    data.Currency = data.Item.Currency;
 
     $.ajax({
         type: 'POST',
@@ -832,7 +836,7 @@ $('#idCheckoutForm').validator().on('submit', function (e) {
       // everything looks good!
 
       // uncomment if you like to stop reloading page after successfull ajax request
-      //   e.preventDefault();
+      e.preventDefault();
       reqCheckout();
     }
   }
@@ -863,7 +867,7 @@ function reqCheckout(){
     data.Price = price;
     data.Debit = paidValue;
     data.Credit = price - paidValue;
-    data.Currency = item.Currency;
+    data.Currency = data.Item.Currency;
 
     // finds pass ID from the log
     data.PassId = getVisitorPassId(data.Visitor);

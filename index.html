@@ -50,15 +50,15 @@
         </div>
       </div>
 
-      <ul class="nav nav-tabs">
-        <li><a data-toggle="tab" role="tab" href="#idMainTab">Main</a></li>
+      <ul id="myTabs" class="nav nav-tabs">
+        <li class="active"><a data-toggle="tab" role="tab" href="#idMainTab">Main</a></li>
         <li><a data-toggle="tab" role="tab" href="#idSettingsTab">Settings</a></li>
-        <li class="active"><a data-toggle="tab" role="tab" href="#idStatsTab">Stats</a></li>
+        <li><a data-toggle="tab" role="tab" href="#idStatsTab">Stats</a></li>
         <!-- <li><a data-toggle="tab" role="tab" href="#idInvoiceTab">Invoice</a></li> -->
       </ul>
 
       <div class="tab-content">
-        <div id="idMainTab" class="tab-pane fade in panel panel-default" role="tabpanel">
+        <div id="idMainTab" class="tab-pane fade in active panel panel-default" role="tabpanel">
 
           <div class="row">
             <div class="col-sm-6">
@@ -66,7 +66,7 @@
                 <div class="panel-heading">Vehicle Check-in</div>
                 <div class="panel-body"> 
                   <div class="form-group-md">
-                    <form id="idCheckinForm" data-toggle="validator" data-disable=true role="form">
+                    <form id="idCheckinForm" data-toggle="validator" data-disable=true role="form" autocomplete="off">
                       <div class="input-group">
                         <span class="input-group-addon">Name</span>
                         <select class="form-control" id="idVisitorsIn" onchange="updateVisitorInfo(this)"><option hidden disabled selected value> -- select an option -- </option></select>
@@ -143,7 +143,7 @@
                 <div class="panel-heading">Vehicle Check-out</div>
                 <div class="panel-body"> 
                   <div class="form-group-md">
-                    <form id="idCheckoutForm" data-toggle="validator" data-disable=true role="form">
+                    <form id="idCheckoutForm" data-toggle="validator" data-disable=true role="form" autocomplete="off">
 
                       <div class="input-group">
                         <span class="input-group-addon">Name</span>
@@ -265,7 +265,7 @@
                 <div class="panel-heading">Modify Visitor</div>
                 <div class="panel-body">
                   <div class="form-group-sm">
-                    <form id="idAddForm" data-toggle="validator" data-disable=true role="form">
+                    <form id="idAddForm" data-toggle="validator" data-disable=true role="form" autocomplete="off">
                       <div class="form-group">
                         <input type="text" class="form-control"  id="idNameNew" placeholder="Name" pattern="^[\sA-Za-z0-9]{1,}$" maxlength="15" data-error="Name contains invalid characters (Allowed A-Z, a-z, 0-9)" required></input>
                         <div class="help-block with-errors"></div>
@@ -298,7 +298,7 @@
                 <div class="panel-heading">Modify Item</div>
                 <div class="panel-body">
                   <div class="form-group-sm">
-                    <form id="idAddItemForm" data-toggle="validator" data-disable=true role="form">
+                    <form id="idAddItemForm" data-toggle="validator" data-disable=true role="form" autocomplete="off">
                       <div class="form-group">
                         <input type="text" class="form-control"  id="idItemNameNew" placeholder="Name" pattern="^[\sA-Za-z0-9]{1,}$" maxlength="15" data-error="Name contains invalid characters (Allowed A-Z, a-z, 0-9)" required></input>
                         <div class="help-block with-errors"></div>
@@ -323,6 +323,11 @@
                         <!-- pattern="^(?:\+[0-9] ?){6,14}[0-9]$"  -->
                         <div class="help-block with-errors"></div>
                       </div>
+                      <label class="checkbox-inline">
+                        <input type="checkbox" value="" id="idItemCheckinOnly">Checkin only ?
+                      </label>
+                      <!-- <input type="checkbox" id="idItemCheckinOnly" name="idItemCheckinOnly" aria-label="Checkbox for following text input"> Checkin only ?</input> -->
+
                       <button type="submit" class="btn btn-success btn-sm" name="add" id="idAdditemBut">Add</button>
                       <button type="submit" class="btn btn-success btn-sm" name="delete" id="idDelitemBut">Delete</button>
                       <button type="reset" class="btn btn-danger btn-sm" id="idAdditemCancelBut" onclick="this.form.reset();document.getElementById('idAdditemStatus').innerHTML='';">Clear</button>
@@ -351,7 +356,7 @@
                 <div class="panel-heading">Cash Advance</div>
                 <div class="panel-body">
                   <div class="form-group-sm">
-                    <form id="idCashAdvanceForm" data-toggle="validator" data-disable=true role="form">
+                    <form id="idCashAdvanceForm" data-toggle="validator" data-disable=true role="form" autocomplete="off">
                       <div class="form-group">
                         <select class="form-control" id="idCashAdvName" onchange="updateCashAdvanceInfo(this)"><option hidden disabled selected value> -- select an option -- </option>></select>
                         <div class="help-block with-errors"></div>
@@ -383,7 +388,7 @@
         </div>
 
 
-        <div id="idStatsTab" class="tab-pane fade active in panel panel-default" role="tabpanel">
+        <div id="idStatsTab" class="tab-pane fade in panel panel-default" role="tabpanel">
 
           <div class="panel panel-default" >
             <div class="panel-heading">Reports</div>
