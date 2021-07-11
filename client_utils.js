@@ -779,7 +779,7 @@ $('#idCheckinForm').validator().on('submit', function (e) {
     } else {
       // everything looks good!
       // uncomment if you like to stop reloading page after successfull ajax request
-      e.preventDefault();
+    //   e.preventDefault();
       reqCheckin();
     }
   }
@@ -836,7 +836,7 @@ $('#idCheckoutForm').validator().on('submit', function (e) {
       // everything looks good!
 
       // uncomment if you like to stop reloading page after successfull ajax request
-      e.preventDefault();
+    //   e.preventDefault();
       reqCheckout();
     }
   }
