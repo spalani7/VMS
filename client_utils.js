@@ -87,7 +87,7 @@ function getVisitorStatus(visitorObj)
     // assuming gVisitorLogs is already sorted in descending order (starting index contains most recent ones)
     for(var i=0; i<gVisitorLogs.length; i++)
     {
-        if(gVisitorLogs[i].Visitor.Name == visitorObj.Name || gVisitorLogs[i].Visitor.VehicleNo == visitorObj.VehicleNo){
+        if((gVisitorLogs[i].Visitor.Name == visitorObj.Name || gVisitorLogs[i].Visitor.VehicleNo == visitorObj.VehicleNo) && gVisitorLogs[i].Item != null){
             visitorLogIdx = i;
             break;
         }
@@ -98,7 +98,6 @@ function getVisitorStatus(visitorObj)
 function prepareDownload(reqtype, data)
 {
     var mydata = JSON.parse(JSON.stringify(data));
-
     var tables = {};
 
     reqtype.forEach((val,idx)=>{
@@ -119,7 +118,8 @@ function prepareDownload(reqtype, data)
                         // }
                         // formatter has no effect on the downloaded output, so using mutator
                         column.mutator = function (value, data, type, params, component){
-                            return moment(value).format("DD/MM/YYYY HH:mm:ss");
+                            if(value == null) return "-";
+                            else return moment(value).format("DD/MM/YYYY HH:mm:ss");
                         }
                     }
                     if (column.field == "CheckedIn") {
@@ -136,13 +136,7 @@ function prepareDownload(reqtype, data)
                     }
                     if (column.field == "EntryWeight" || column.field == "ExitWeight") {
                         column.mutator = function (value, data, type, params, component){
-                            if(value) return value.toString() + " " + data.Item.Units;
-                            else return "-";
-                        }
-                    }
-                    if (column.field == "Price" || column.field == "Paid"  || column.field == "Credit") {
-                        column.mutator = function (value, data, type, params, component){
-                            if(value) return value.toString() + " " + data.Item.Currency;
+                            if(value && data.Item) return value.toString() + " " + data.Item.Units;
                             else return "-";
                         }
                     }
@@ -174,17 +168,14 @@ function downloadXlsx(tables)
 {
     var tablenames = Object.keys(tables);
     var table = tables[tablenames[0]];
-    tablenames.forEach((k, idx) => {
-        tables[k] = (idx == 0) ? true : `#idStatsTable${idx+1}`;
-    });
-    console.log(tables)
-    table.download("xlsx", "data.xlsx", tables);
+    tables[tablenames[0]] = true;
+    table.download("xlsx", `vms_log_${moment().format("YYYYMMDDHHmmss")}.xlsx`, {sheets: tables});
 }
 
 function downloadPdf(tables)
 {
     Object.keys(tables).forEach((k)=>{
-        tables[k].download("pdf", `data_${k}.pdf`, {
+        tables[k].download("pdf", `vms_log_${moment().format("YYYYMMDDHHmmss")}_${k}.pdf`, {
             orientation:"portrait", //set page orientation to portrait
             title:"Daily log report", //add title to report
             autoTable:{ //advanced table styling
@@ -462,12 +453,8 @@ function updateVisitorTable(visitorlogs){
                 }
                 if (column.field == "EntryWeight" || column.field == "ExitWeight") {
                     column.mutator = function (value, data, type, params, component){
-                        return value.toString() + " " + data.Item.Units;
-                    }
-                }
-                if (column.field == "Price" || column.field == "Paid"  || column.field == "Credit") {
-                    column.mutator = function (value, data, type, params, component){
-                        return  value.toString() + " " + data.Item.Currency;
+                        if(value && data.Item) return value.toString() + " " + data.Item.Units;
+                        else return "-";
                     }
                 }
                 // if (column.field == "TimeIn") column.field = "Item.Name";
@@ -804,10 +791,11 @@ function reqCheckin(){
     data.Visitor.Phone = document.getElementById("idPhoneIn").value;
     data.Item = getItemByName(document.getElementById("idItemReqIn").value);
     data.EntryWeight = parseFloat(parseFloat(document.getElementById("idEntryWeightIn").value).toFixed(3)),
-    data.ExitWeight = 0,
-    data.Price = 0;
-    data.Paid = 0;
-    data.Credit = 0;
+    // data.ExitWeight = 0,
+    // data.Price = 0;
+    // data.Debit = 0;
+    // data.Credit = 0;
+    data.Currency = item.Currency;
 
     $.ajax({
         type: 'POST',
@@ -873,8 +861,9 @@ function reqCheckout(){
     data.EntryWeight = entryWeight,
     data.ExitWeight = exitWeight,
     data.Price = price;
-    data.Paid = paidValue;
+    data.Debit = paidValue;
     data.Credit = price - paidValue;
+    data.Currency = item.Currency;
 
     // finds pass ID from the log
     data.PassId = getVisitorPassId(data.Visitor);
@@ -1130,7 +1119,7 @@ function createCheckoutInvoice(data) {
 
         doc.text("Total", 30, 93);
         doc.text("" + (data.ExitWeight - data.EntryWeight) + " " + data.Item.Units, 90, 93);
-        doc.text(data.Item.Currency + " " + data.Paid, 120, 93);
+        doc.text(data.Item.Currency + " " + data.Debit, 120, 93);
 
         // doc.autoPrint();
         // auto print not working.. workaround below
