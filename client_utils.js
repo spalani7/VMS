@@ -75,7 +75,7 @@ function getItemByName(itemName)
 {
     for(var i=0; i<gItems.length; i++)
     {
-        if(gItems[i].Name == itemName){
+        if(gItems[i].Name.trim() == itemName.trim()){
             return gItems[i]
         }
     }
@@ -690,10 +690,10 @@ $('#idAddForm').validator().on('submit', function (e) {
 function reqModifyVisitor(reqType){
     let data = {};
     data.ReqType = reqType;
-    data.Name = document.getElementById("idNameNew").value;
-    data.VehicleNo = document.getElementById("idVehicleNew").value;
-    data.Company = document.getElementById("idCompanyNew").value;
-    data.Phone = document.getElementById("idPhoneNew").value;
+    data.Name = document.getElementById("idNameNew").value.trim();
+    data.VehicleNo = document.getElementById("idVehicleNew").value.trim();
+    data.Company = document.getElementById("idCompanyNew").value.trim();
+    data.Phone = document.getElementById("idPhoneNew").value.trim();
     $.ajax({
         type: 'POST',
         data: JSON.stringify(data),
@@ -741,10 +741,10 @@ $('#idAddItemForm').validator().on('submit', function (e) {
 function reqModifyItem(reqType){
     let data = {};
     data.ReqType = reqType;
-    data.Name = document.getElementById("idItemNameNew").value;
-    data.Currency = document.getElementById("idItemCurrencyNew").value;
-    data.Price = document.getElementById("idItemPriceNew").value;
-    data.Units = document.getElementById("idItemUnitsNew").value;
+    data.Name = document.getElementById("idItemNameNew").value.trim();
+    data.Currency = document.getElementById("idItemCurrencyNew").value.trim();
+    data.Price = document.getElementById("idItemPriceNew").value.trim();
+    data.Units = document.getElementById("idItemUnitsNew").value.trim();
     data.CheckinOnly = document.getElementById("idItemCheckinOnly").checked;
     $.ajax({
         type: 'POST',
@@ -789,12 +789,12 @@ function reqCheckin(){
     let data = {};
     data.PassId = gVisitorLogs.length + 1;
     data.Visitor = {}
-    data.Visitor.Name = document.getElementById("idVisitorsIn").value;
-    data.Visitor.VehicleNo = document.getElementById("idVehiclesIn").value;
-    data.Visitor.Company = document.getElementById("idCompanyIn").value;
-    data.Visitor.Phone = document.getElementById("idPhoneIn").value;
-    data.Item = getItemByName(document.getElementById("idItemReqIn").value);
-    data.EntryWeight = parseFloat(parseFloat(document.getElementById("idEntryWeightIn").value).toFixed(3)),
+    data.Visitor.Name = document.getElementById("idVisitorsIn").value.trim();
+    data.Visitor.VehicleNo = document.getElementById("idVehiclesIn").value.trim();
+    data.Visitor.Company = document.getElementById("idCompanyIn").value.trim();
+    data.Visitor.Phone = document.getElementById("idPhoneIn").value.trim();
+    data.Item = getItemByName(document.getElementById("idItemReqIn").value.trim());
+    data.EntryWeight = parseFloat(parseFloat(document.getElementById("idEntryWeightIn").value.trim()).toFixed(3)),
     // data.ExitWeight = 0,
     // data.Price = 0;
     // data.Debit = 0;
@@ -846,12 +846,12 @@ function reqCheckout(){
 
     let data = {};
     data.Visitor = {}
-    data.Visitor.Name = document.getElementById("idVisitors").value;
-    data.Visitor.VehicleNo = document.getElementById("idVehicles").value;
-    data.Visitor.Company = document.getElementById("idCompany").value;
-    data.Visitor.Phone = document.getElementById("idPhone").value;
-    var entryWeight = parseFloat(parseFloat(document.getElementById("idEntryWeight").value).toFixed(3));
-    var exitWeight = parseFloat(parseFloat(document.getElementById("idExitWeight").value).toFixed(3));
+    data.Visitor.Name = document.getElementById("idVisitors").value.trim();
+    data.Visitor.VehicleNo = document.getElementById("idVehicles").value.trim();
+    data.Visitor.Company = document.getElementById("idCompany").value.trim();
+    data.Visitor.Phone = document.getElementById("idPhone").value.trim();
+    var entryWeight = parseFloat(parseFloat(document.getElementById("idEntryWeight").value.trim()).toFixed(3));
+    var exitWeight = parseFloat(parseFloat(document.getElementById("idExitWeight").value.trim()).toFixed(3));
     if(exitWeight < entryWeight) 
     {
         alert("Checkout failed\nError: Exit weight should be greater than Entry weight");
@@ -979,10 +979,10 @@ function addCashAdvance(reqType)
     let data = {};
     data.ReqType = reqType;
     data.Visitor = {};
-    data.Visitor.Name = document.getElementById("idCashAdvName").value;
-    data.Visitor.VehicleNo = document.getElementById("idCashAdvVehicleNo").value;
-    data.Credit = document.getElementById("idCashAdvPrice").value;
-    data.Currency = document.getElementById("idCashAdvCurrency").value;
+    data.Visitor.Name = document.getElementById("idCashAdvName").value.trim();
+    data.Visitor.VehicleNo = document.getElementById("idCashAdvVehicleNo").value.trim();
+    data.Credit = document.getElementById("idCashAdvPrice").value.trim();
+    data.Currency = document.getElementById("idCashAdvCurrency").value.trim();
     $.ajax({
         type: 'POST',
         data: JSON.stringify(data),
